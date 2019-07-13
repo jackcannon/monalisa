@@ -1,66 +1,81 @@
-import * as faceapi from 'face-api.js';
-import { canvas, faceDetectionNet, faceDetectionOptions, saveFile } from './face-api/examples-nodejs/commons';
 import * as raspberryPiCamera from 'raspberry-pi-camera-native';
 import { createTimer, toFixed } from './utils';
 import { BehaviorSubject } from 'rxjs';
+import { filter, first } from 'rxjs/operators';
 import { IPoint } from './interfaces';
+import { Worker, isMainThread, parentPort, workerData } from 'worker_threads';
 
 const cameraOptions = {
   // width: 1280,
   // height: 720,
   width: 640,
   height: 480,
-  fps: 1,
+  fps: 4,
   encoding: 'JPEG',
-  quality: 100
+  quality: 75
 };
 
-let subject:BehaviorSubject<IPoint> = new BehaviorSubject<IPoint>(null);
+let pointsSubject:BehaviorSubject<IPoint[]> = new BehaviorSubject<IPoint[]>(null);
+let framesSubject:BehaviorSubject<Buffer> = new BehaviorSubject<Buffer>(null);
 
-export const setup = async ():Promise<BehaviorSubject<IPoint>> => {
-  await faceDetectionNet.loadFromDisk('./face-api/weights');
+let worker:Worker;
+let workerMsgs:BehaviorSubject<any> = new BehaviorSubject<any>(null);
+
+export const setup = async ():Promise<BehaviorSubject<IPoint[]>> => {
+  await createWorker();
   await startCamera();
-  return await runLoop();
+  await runCamera();
+  startProcessing();
+
+  return pointsSubject;
 }
 
-const startCamera = () => {
+const createWorker = ():Promise<any> => {
+  return new Promise((resolve) => {
+    worker = new Worker('./worker-faces.js', {workerData: {cameraOptions}});
+    worker.on('message', (data) => {
+      workerMsgs.next(data);
+      if (data && data.type && data.type === 'init') {
+        resolve();
+      }
+    })
+  });
+};
+
+const startCamera = ():Promise<any> => {
   return new Promise((resolve) => {
     raspberryPiCamera.start(cameraOptions, resolve);
   });
-}
+};
 
-const detect = async (imgBuffer):Promise<IPoint> => {
-  const img = await canvas.loadImage(imgBuffer as any);
-  const detections = await faceapi.detectAllFaces(img, faceDetectionOptions);
-  // if (detections.length) {
-  //   saveOutput(img, detections);
-  // }
-  return (detections.length) ? detectionToPoint(detections[0]) : null;
-}
+const runCamera = ():Promise<any> => {
+  const timer = createTimer('frame');
+  raspberryPiCamera.on('frame', (buffer:Buffer) => {
+    // timer();
+    framesSubject.next(buffer);
+  });
+  return framesSubject.pipe(first((frame) => !!frame)).toPromise();
+};
 
-const detectionToPoint = (detection:faceapi.FaceDetection):IPoint => ({
-  x: toFixed((detection.box.x + (detection.box.width / 2)) / cameraOptions.width, 6),
-  y: toFixed((detection.box.y + (detection.box.height / 2)) / cameraOptions.height, 6)
-})
-
-const saveOutput = async (img, detections) => {
-  const out = faceapi.createCanvasFromMedia(img) as any;
-  faceapi.draw.drawDetections(out, detections);
-  const now = (new Date()).toISOString().replace(/T|:|\./g, '-').substring(0, 19);
-  const outputName = `photos/${now}.jpg`;
-  saveFile(outputName, out.toBuffer('image/jpeg'));
-  console.log('done, saved results to', outputName);
-}
-
-const runLoop = async ():Promise<BehaviorSubject<IPoint>> => {
-  const timer = createTimer('camera-loop');
-  subject = new BehaviorSubject<IPoint>(null);
-
-  raspberryPiCamera.on('frame', async (buffer) => {
-    const point:IPoint = await detect(buffer);
-    timer(point);
-    subject.next(point);
+const runProcess = () => {
+  const msg = {
+    type: 'detect',
+    buffer: framesSubject.value
+  };
+  worker.postMessage(msg);
+};
+const startProcessing = () => {
+  const timer = createTimer('points');
+  workerMsgs
+  .pipe(filter(({type}) => type === 'points'))
+  .subscribe(({points}) => {
+    pointsSubject.next(points);
+    timer(points.map((point) => ({
+      x: toFixed(point.x, 2),
+      y: toFixed(point.y, 2)
+    })));
+    runProcess();
   });
 
-  return subject;
+  runProcess();
 }

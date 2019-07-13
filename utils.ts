@@ -17,3 +17,7 @@ export const delay = (ms) => {
 };
 
 export const toFixed = (num, decimalPlaces = 3) => Math.round(num * Math.pow(10, decimalPlaces)) / Math.pow(10, decimalPlaces);
+
+export const padLeft = (num:number, places:number = 3) => (Math.pow(10, places) + '' + num).substr(-places);
+
+export const formatTime = (ms:number) => new Date(ms).toISOString().substr(11, 12);

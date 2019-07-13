@@ -64,10 +64,10 @@ export const getCurrent = () => ({
 
 export const lookRelativeDegrees = (posCardinal:IPoint = {x: 0.5, y: 0.5}, speed?:number) => {
   const pos = cardinalToDegrees(posCardinal);
-  return look(pos);
+  return look(pos, speed);
 };
 
-export const moveRelativeDegrees = (posCardinal:IPoint = {x: 0.5, y: 0.5}, duration?:number) => {
+export const moveRelativeDegrees = (posCardinal:IPoint = {x: 0.5, y: 0.5}, duration:number = 10) => {
   const pos = cardinalToDegrees(posCardinal);
   return Promise.all([
     move('base', pos.x, duration),
