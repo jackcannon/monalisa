@@ -12,7 +12,7 @@ const inputSize = 416
 const scoreThreshold = 0.5
 
 // MtcnnOptions
-const minFaceSize = 50
+const minFaceSize = 60
 const scaleFactor = 0.8
 
 function getFaceDetectorOptions(net: faceapi.NeuralNetwork<any>) {

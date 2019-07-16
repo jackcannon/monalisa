@@ -1,10 +1,14 @@
 import * as faceapi from 'face-api.js';
 import { canvas, faceDetectionNet, faceDetectionOptions, saveFile } from './face-api/examples-nodejs/commons';
-import { IPoint } from './interfaces';
+import { IFacePoint } from './interfaces';
 import { toFixed } from './utils';
 import { workerData, parentPort, isMainThread } from 'worker_threads';
 
 const { cameraOptions } = workerData;
+
+
+const DETECT_SINGLE = false; // Only detect 1 face. Should be faster
+
 
 console.log('worker started');
 
@@ -32,18 +36,41 @@ const handleDetectMsg = async (msg:{type:string, buffer:Uint8Array}) => {
 };
 
 
-const detect = async (imgBuffer):Promise<IPoint[]> => {
+const detect = async (imgBuffer):Promise<IFacePoint[]> => {
+  if (DETECT_SINGLE) {
+    return await detectSingle(imgBuffer);
+  } else {
+    return await detectMulti(imgBuffer);
+  }
+}
+
+const detectSingle = async (imgBuffer):Promise<IFacePoint[]> => {
+  const img = await canvas.loadImage(imgBuffer as any);
+  const detection = await faceapi.detectSingleFace(img, faceDetectionOptions);
+  // if (detections.length) {
+  //   saveOutput(img, detections);
+  // }
+  return [detection]
+    .filter((detection) => detection)
+    // .filter((detection) => detection.score > 0.9)
+    .map(detectionToPoint);;
+  };
+
+const detectMulti = async (imgBuffer):Promise<IFacePoint[]> => {
   const img = await canvas.loadImage(imgBuffer as any);
   const detections = await faceapi.detectAllFaces(img, faceDetectionOptions);
   // if (detections.length) {
   //   saveOutput(img, detections);
   // }
-  return detections.map(detectionToPoint);
+  return detections
+    // .filter((detection) => detection.score > 0.9)
+    .map(detectionToPoint);
 };
 
-const detectionToPoint = (detection:faceapi.FaceDetection):IPoint => ({
-  x: toFixed((detection.box.x + (detection.box.width / 2)) / cameraOptions.width, 6),
-  y: toFixed((detection.box.y + (detection.box.height / 2)) / cameraOptions.height, 6)
+const detectionToPoint = (detection:faceapi.FaceDetection):IFacePoint => ({
+  x: toFixed((detection.box.x + (detection.box.width * 0.5)) / cameraOptions.width, 6),
+  y: toFixed((detection.box.y + (detection.box.height * 0.5)) / cameraOptions.height, 6),
+  score: toFixed(detection.score, 6)
 });
 
 const saveOutput = async (img, detections) => {

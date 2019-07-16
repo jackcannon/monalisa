@@ -7,10 +7,12 @@ export const setup = (board) => {
   const opts = {
     width: 128,
     height: 64,
+    // address: 0x3D
     address: 0x3C
   };
 
   oled = new OLED(board, five, opts);
+  oled.turnOnDisplay();
   screen = getFreshScreen();
   previousScreen = getFreshScreen();
   // start();
@@ -18,8 +20,8 @@ export const setup = (board) => {
 
 export const reset = () => {
   clearDisplay();
-  // fillRect(0, 0, 128, 64, 1);
   updateChangedPixels();
+  oled.turnOffDisplay();
 };
 
 
@@ -187,7 +189,7 @@ const getHorizonalLinesOfCircle = (circle) => {
 };
 
 // eyelids = percentage the eyes are closed
-const drawEyes = (lookX = 0, lookY = 0, eyelidA = 10, eyelidB = eyelidA) => {
+const drawEyes = (lookX = 0, lookY = 0, eyelidA = 10, eyelidB = eyelidA, waiting = false) => {
   const eyelids = [eyelidA, eyelidB];
   const eyeMoveXDistance = 16; // maximum distance an eye is allow to move on X
 
@@ -222,17 +224,63 @@ const drawEyes = (lookX = 0, lookY = 0, eyelidA = 10, eyelidB = eyelidA) => {
     // outer line
     addPixels(outer);
 
-    // pupil
-    const pupilPosX = eye[0] + Math.round(pupilMoveX * pupilMoveXDistance)
-    const pupilPosY = Math.round(eye[1] + (width * 0.1)) + Math.round(pupilMoveY * pupilMoveYDistance);
-    // fillCircle(...pupilPos, Math.round(width * 0.2), 1);
-    const pupilBorder = getCirclePixels(pupilPosX, pupilPosY, Math.round(width * 0.25), 1);
-    const pupilPixels = getHorizonalLinesOfCircle(pupilBorder);
-    fillShading(pupilPixels, 5, !eyeIndex);
-    addPixels(pupilBorder);
-    // const glint = [pupilPos[0] + Math.round(width * 0.1), pupilPos[1] - Math.round(width * 0.1)];
-    // drawPixel(...glint, false);
-    // drawPixel(glint[0] - 1, glint[1] - 1, false);
+    if (waiting) {
+      // waiting symbol
+      const pupilPosX = Math.round(eye[0])
+      const pupilPosY = Math.round(eye[1] + (width * 0.1));
+      const waitWidth = 9;
+      const waitHeight = 13;
+
+      const leftX = Math.floor(pupilPosX - (waitWidth / 2));
+      const rightX = Math.ceil(pupilPosX + (waitWidth / 2));
+      const topY = Math.floor(pupilPosY - (waitHeight / 2));
+      const bottomY = Math.ceil(pupilPosY + (waitHeight / 2));
+
+      // Top
+      drawLine(leftX, topY, rightX, topY, 1);
+
+      const topWaitOutline = [
+        ...getLinePixels(leftX, topY, leftX, topY + 2, 1),
+        ...getLinePixels(rightX, topY, rightX, topY + 2, 1),
+        ...getLinePixels(leftX, topY + 2, pupilPosX, pupilPosY, 1),
+        ...getLinePixels(rightX, topY + 2, pupilPosX, pupilPosY, 1),
+      ];
+      addPixels(topWaitOutline);
+      fillShading(getHorizonalLinesOfCircle(topWaitOutline), 2, !eyeIndex);
+      drawLine(leftX + 1, topY + 1, rightX - 1, topY + 1, 0);
+      drawLine(leftX + 1, topY + 2, rightX - 1, topY + 2, 0);
+
+
+      // Bottom
+      drawLine(leftX, bottomY, rightX, bottomY, 1);
+
+      const bottomWaitOutline = [
+        ...getLinePixels(leftX, bottomY, leftX, bottomY - 2, 1),
+        ...getLinePixels(rightX, bottomY, rightX, bottomY - 2, 1),
+        ...getLinePixels(leftX, bottomY - 2, pupilPosX, pupilPosY, 1),
+        ...getLinePixels(rightX, bottomY - 2, pupilPosX, pupilPosY, 1),
+      ];
+      addPixels(bottomWaitOutline);
+      const bottomShading = [
+        ...getLinePixels(leftX + 1, bottomY, leftX + 1, bottomY - 3, 1),
+        ...getLinePixels(rightX - 1, bottomY, rightX - 1, bottomY - 3, 1)
+      ];
+      fillShading(getHorizonalLinesOfCircle(bottomShading), 2, !eyeIndex, 1);
+
+
+    } else {
+      // pupil
+      const pupilPosX = eye[0] + Math.round(pupilMoveX * pupilMoveXDistance)
+      const pupilPosY = Math.round(eye[1] + (width * 0.1)) + Math.round(pupilMoveY * pupilMoveYDistance);
+      // fillCircle(...pupilPos, Math.round(width * 0.2), 1);
+      const pupilBorder = getCirclePixels(pupilPosX, pupilPosY, Math.round(width * 0.25), 1);
+      const pupilPixels = getHorizonalLinesOfCircle(pupilBorder);
+      fillShading(pupilPixels, 5, !eyeIndex);
+      addPixels(pupilBorder);
+      // const glint = [pupilPos[0] + Math.round(width * 0.1), pupilPos[1] - Math.round(width * 0.1)];
+      // drawPixel(...glint, false);
+      // drawPixel(glint[0] - 1, glint[1] - 1, false);
+    }
 
     // eyelids
     const lidLineIndex = Math.min(Math.round(horLines.length * (eyelids[eyeIndex] / 100)), horLines.length - 1);
@@ -386,14 +434,15 @@ let previousValues = [];
 
 let screen:any[][] = [[]];
 let previousScreen = [];
+// let timer;
 
 export const start = () => {
-  drawFrame();
+  drawFrame(true);
 };
 
-export const drawFrame = () => {
+export const drawFrame = (waiting = false) => {
   // const values = [...getLookValues(), ...getBlinkValue(loop)];
-  const values = [0, 0, ...getBlinkValue(loop)];
+  const values:any[] = [0, 0, 25, 25, waiting];
 
 
   if (areValuesDifferent(previousValues, values)) {
@@ -411,5 +460,5 @@ export const drawFrame = () => {
   }
 
   loop++;
-  // timer = setTimeout(() => drawFrame(), 2000);
+  // timer = setTimeout(() => drawFrame(), 750);
 };

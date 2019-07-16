@@ -21,3 +21,9 @@ export const toFixed = (num, decimalPlaces = 3) => Math.round(num * Math.pow(10,
 export const padLeft = (num:number, places:number = 3) => (Math.pow(10, places) + '' + num).substr(-places);
 
 export const formatTime = (ms:number) => new Date(ms).toISOString().substr(11, 12);
+
+export const distanceBetweenPoints = (pointA, pointB):number => {
+  const distanceX = Math.abs(pointA.x - pointB.x);
+  const distanceY = Math.abs(pointA.y - pointB.y);
+  return Math.sqrt(Math.pow(distanceX, 2) + Math.pow(distanceY, 2));
+};

@@ -1,6 +1,6 @@
 import {Servo} from 'johnny-five';
 import { IPoint } from './interfaces';
-import { createTimer, toFixed } from './utils';
+import { createTimer, toFixed, distanceBetweenPoints } from './utils';
 
 const servos:{[servoName:string]: Servo} = {};
 
@@ -12,30 +12,40 @@ const FOVY = 60;
 // const FOVX = 180;
 // const FOVY = 120;
 
+const startingPosX = 90;
+const startingPosY = 90;
+
+const centrePosX = 85;
+const centrePosY = 102;
+
 const timer = createTimer('movement');
 
 export const setup = () => {
   servos.base = new Servo({
     controller: 'PCA9685',
     pin: 0,
-    center: true
+    center: true,
+    startAt: startingPosX
   });
 
   servos.head = new Servo({
     controller: 'PCA9685',
     pin: 3,
     range: [0, 125],
-    startAt: 90
+    startAt: startingPosY
   });
 };
 
 export const reset = () => {
-  servos.base.to(90);
-  servos.head.to(90);
+  servos.base.to(startingPosX);
+  servos.head.to(startingPosY);
 };
 
 export const move = (servoName, position, time = 1000) => {
-  const servo = servos[servoName];
+  let servo = servos[servoName];
+  if (!servo && typeof servoName !== 'string' && servoName instanceof Servo) {
+    servo = servoName;
+  }
   return new Promise((resolve, reject) => {
     servo.once('move:complete', resolve);
     servo.to(position, time);
@@ -44,11 +54,7 @@ export const move = (servoName, position, time = 1000) => {
 
 export const look = (pos:IPoint = {x: 90, y: 90}, speed:number = 20) => {
   const current = getCurrent();
-
-  const distanceX = Math.abs(pos.x - current.x);
-  const distanceY = Math.abs(pos.y - current.y);
-  const distance = Math.sqrt(Math.pow(distanceX, 2) + Math.pow(distanceY, 2));
-
+  const distance = distanceBetweenPoints(pos, current);
   const duration = distance * speed;
 
   return Promise.all([
@@ -75,7 +81,7 @@ export const moveRelativeDegrees = (posCardinal:IPoint = {x: 0.5, y: 0.5}, durat
   ]);
 };
 
-const cardinalToDegrees = (pos:IPoint, baseDegrees = {x: 90, y: 90}) => ({
+const cardinalToDegrees = (pos:IPoint, baseDegrees = {x: centrePosX, y: centrePosY}) => ({
   x: toFixed((baseDegrees.x - (FOVX / 2)) + ((1 - pos.x) * FOVX), 1),
   y: toFixed((baseDegrees.y - (FOVY / 2)) + (pos.y * FOVY), 1)
 });

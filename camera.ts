@@ -2,26 +2,28 @@ import * as raspberryPiCamera from 'raspberry-pi-camera-native';
 import { createTimer, toFixed } from './utils';
 import { BehaviorSubject } from 'rxjs';
 import { filter, first } from 'rxjs/operators';
-import { IPoint } from './interfaces';
+import { IFacePoint } from './interfaces';
 import { Worker, isMainThread, parentPort, workerData } from 'worker_threads';
 
 const cameraOptions = {
-  // width: 1280,
-  // height: 720,
-  width: 640,
-  height: 480,
-  fps: 4,
+  // width: 640,
+  // height: 480,
+  // width: 320,
+  // height: 240,
+  width: 240,
+  height: 180,
+  fps: 20,
   encoding: 'JPEG',
-  quality: 75
+  quality: 95
 };
 
-let pointsSubject:BehaviorSubject<IPoint[]> = new BehaviorSubject<IPoint[]>(null);
+let pointsSubject:BehaviorSubject<IFacePoint[]> = new BehaviorSubject<IFacePoint[]>(null);
 let framesSubject:BehaviorSubject<Buffer> = new BehaviorSubject<Buffer>(null);
 
 let worker:Worker;
 let workerMsgs:BehaviorSubject<any> = new BehaviorSubject<any>(null);
 
-export const setup = async ():Promise<BehaviorSubject<IPoint[]>> => {
+export const setup = async ():Promise<BehaviorSubject<IFacePoint[]>> => {
   await createWorker();
   await startCamera();
   await runCamera();
@@ -32,7 +34,7 @@ export const setup = async ():Promise<BehaviorSubject<IPoint[]>> => {
 
 const createWorker = ():Promise<any> => {
   return new Promise((resolve) => {
-    worker = new Worker('./worker-faces.js', {workerData: {cameraOptions}});
+    worker = new Worker('./worker-faceapi.js', {workerData: {cameraOptions}});
     worker.on('message', (data) => {
       workerMsgs.next(data);
       if (data && data.type && data.type === 'init') {
@@ -67,15 +69,16 @@ const runProcess = () => {
 const startProcessing = () => {
   const timer = createTimer('points');
   workerMsgs
-  .pipe(filter(({type}) => type === 'points'))
-  .subscribe(({points}) => {
-    pointsSubject.next(points);
-    timer(points.map((point) => ({
-      x: toFixed(point.x, 2),
-      y: toFixed(point.y, 2)
-    })));
-    runProcess();
-  });
+    .pipe(filter(({type}) => type === 'points'))
+    .subscribe(({points}) => {
+      pointsSubject.next(points);
+      timer(points.map((point) => ({
+        x: toFixed(point.x, 2),
+        y: toFixed(point.y, 2),
+        score: point.score
+      })));
+      runProcess();
+    });
 
   runProcess();
 }
