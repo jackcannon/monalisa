@@ -4,18 +4,7 @@ import { BehaviorSubject } from 'rxjs';
 import { filter, first } from 'rxjs/operators';
 import { IFacePoint } from './interfaces';
 import { Worker, isMainThread, parentPort, workerData } from 'worker_threads';
-
-const cameraOptions = {
-  // width: 640,
-  // height: 480,
-  // width: 320,
-  // height: 240,
-  width: 240,
-  height: 180,
-  fps: 20,
-  encoding: 'JPEG',
-  quality: 95
-};
+import { cameraOptions } from './config';
 
 let pointsSubject:BehaviorSubject<IFacePoint[]> = new BehaviorSubject<IFacePoint[]>(null);
 let framesSubject:BehaviorSubject<Buffer> = new BehaviorSubject<Buffer>(null);
@@ -34,7 +23,7 @@ export const setup = async ():Promise<BehaviorSubject<IFacePoint[]>> => {
 
 const createWorker = ():Promise<any> => {
   return new Promise((resolve) => {
-    worker = new Worker('./worker-faceapi.js', {workerData: {cameraOptions}});
+    worker = new Worker('./worker-faceapi.js', {});
     worker.on('message', (data) => {
       workerMsgs.next(data);
       if (data && data.type && data.type === 'init') {

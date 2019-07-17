@@ -1,14 +1,11 @@
 import * as faceapi from 'face-api.js';
-import { canvas, faceDetectionNet, faceDetectionOptions, saveFile } from './face-api/examples-nodejs/commons';
+import { canvas, faceDetectionNet, getFaceDetectorOptions, saveFile } from './face-api/examples-nodejs/commons';
 import { IFacePoint } from './interfaces';
 import { toFixed } from './utils';
-import { workerData, parentPort, isMainThread } from 'worker_threads';
+import { parentPort, isMainThread } from 'worker_threads';
+import { cameraOptions, savePhotoOnDetection, detectSingleFace, faceDetectMinFaceSize as minFaceSize } from './config';
 
-const { cameraOptions } = workerData;
-
-
-const DETECT_SINGLE = false; // Only detect 1 face. Should be faster
-
+let faceDetectionOptions;
 
 console.log('worker started');
 
@@ -23,6 +20,7 @@ parentPort.on('message', (msg) => {
 
 const setup = async () => {
   await faceDetectionNet.loadFromDisk('./face-api/weights');
+  faceDetectionOptions = getFaceDetectorOptions(faceDetectionNet, { minFaceSize, scaleFactor: 0.8 })
   parentPort.postMessage({type: 'init'});
 };
 
@@ -37,7 +35,7 @@ const handleDetectMsg = async (msg:{type:string, buffer:Uint8Array}) => {
 
 
 const detect = async (imgBuffer):Promise<IFacePoint[]> => {
-  if (DETECT_SINGLE) {
+  if (detectSingleFace) {
     return await detectSingle(imgBuffer);
   } else {
     return await detectMulti(imgBuffer);
@@ -47,9 +45,9 @@ const detect = async (imgBuffer):Promise<IFacePoint[]> => {
 const detectSingle = async (imgBuffer):Promise<IFacePoint[]> => {
   const img = await canvas.loadImage(imgBuffer as any);
   const detection = await faceapi.detectSingleFace(img, faceDetectionOptions);
-  // if (detections.length) {
-  //   saveOutput(img, detections);
-  // }
+  if (detection && savePhotoOnDetection) {
+    saveOutput(img, [detection]);
+  }
   return [detection]
     .filter((detection) => detection)
     // .filter((detection) => detection.score > 0.9)
@@ -59,9 +57,9 @@ const detectSingle = async (imgBuffer):Promise<IFacePoint[]> => {
 const detectMulti = async (imgBuffer):Promise<IFacePoint[]> => {
   const img = await canvas.loadImage(imgBuffer as any);
   const detections = await faceapi.detectAllFaces(img, faceDetectionOptions);
-  // if (detections.length) {
-  //   saveOutput(img, detections);
-  // }
+  if (detections.length && savePhotoOnDetection) {
+    saveOutput(img, detections);
+  }
   return detections
     // .filter((detection) => detection.score > 0.9)
     .map(detectionToPoint);

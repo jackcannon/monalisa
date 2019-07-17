@@ -1,3 +1,3 @@
 export { canvas } from './env';
-export { faceDetectionNet, faceDetectionOptions } from './faceDetection';
+export { faceDetectionNet, getFaceDetectorOptions, faceDetectionOptions } from './faceDetection';
 export { saveFile } from './saveFile';

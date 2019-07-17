@@ -2,15 +2,9 @@ import {Servo} from 'johnny-five';
 import { IPoint } from './interfaces';
 import { createTimer, toFixed, distanceBetweenPoints } from './utils';
 
+import { FOVX, FOVY } from './config';
+
 const servos:{[servoName:string]: Servo} = {};
-
-// Standard RaspiCam
-const FOVX = 70;
-const FOVY = 60;
-
-// WideAngle 3rd Party Cam
-// const FOVX = 180;
-// const FOVY = 120;
 
 const startingPosX = 90;
 const startingPosY = 90;
