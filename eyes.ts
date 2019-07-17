@@ -1,4 +1,5 @@
 import * as five from 'johnny-five';
+import { IEyeConfig } from './interfaces';
 const OLED = require('oled-js');
 
 let oled;
@@ -189,36 +190,25 @@ const getHorizonalLinesOfCircle = (circle) => {
 };
 
 // eyelids = percentage the eyes are closed
-const drawEyes = (lookX = 0, lookY = 0, eyelidA = 10, eyelidB = eyelidA, waiting = false) => {
-  const eyelids = [eyelidA, eyelidB];
+const drawEyes = (eyes:IEyeConfig[], waiting:boolean = false) => {
   const eyeMoveXDistance = 16; // maximum distance an eye is allow to move on X
 
-  const pivotPoint = 100; // at what stage do we stop moving the pupils and start moving the eyes
-  const direction = lookX / Math.abs(lookX);
-  let eyeMoveX = (Math.abs(lookX) <= pivotPoint) ? 0 : (Math.max(Math.abs(lookX) - pivotPoint, 0) / (100 - pivotPoint)) * direction;
-  let pupilMoveX = Math.min(Math.max(lookX / pivotPoint, -1), 1);
-  let pupilMoveY = lookY / 100;
-
-  if (Number.isNaN(eyeMoveX)) eyeMoveX = 0;
-  if (Number.isNaN(pupilMoveX)) pupilMoveX = 0;
-  if (Number.isNaN(pupilMoveY)) pupilMoveY = 0;
-
-  const midpoint = [64 + Math.round(eyeMoveX * eyeMoveXDistance), 32];
+  const midpoint = [64, 32];
   const distance = Math.round(32 * 0.6);
   const width = Math.round(32 * 0.7);
   const height = Math.round(32 * 0.9);
   const pupilMoveXDistance = Math.round(width * 0.7); // maximum distance a pupil is allow to move on X
   const pupilMoveYDistance = Math.round(width * 0.6); // maximum distance a pupil is allow to move on Y
 
-
   const eyeOffset = Math.round((distance) / 2) + width;
-  const eyePos = [
-    [midpoint[0] - eyeOffset, midpoint[1]],
-    [midpoint[0] + eyeOffset, midpoint[1]],
+  const eyePositions = [
+    {x: midpoint[0] - eyeOffset, y: midpoint[1]},
+    {x: midpoint[0] + eyeOffset, y: midpoint[1]},
   ];
 
-  eyePos.forEach((eye, eyeIndex) => {
-    const outer = getEllipsePixels(eye[0], eye[1], width, height, 1, 4);
+  eyes.forEach((eye:IEyeConfig, eyeIndex:number) => {
+    const eyePos = eyePositions[eyeIndex];
+    const outer = getEllipsePixels(eyePos.x, eyePos.y, width, height, 1, 4);
     const horLines = getHorizonalLinesOfCircle(outer);
 
     // outer line
@@ -226,8 +216,8 @@ const drawEyes = (lookX = 0, lookY = 0, eyelidA = 10, eyelidB = eyelidA, waiting
 
     if (waiting) {
       // waiting symbol
-      const pupilPosX = Math.round(eye[0])
-      const pupilPosY = Math.round(eye[1] + (width * 0.1));
+      const pupilPosX = Math.round(eyePos.x)
+      const pupilPosY = Math.round(eyePos.y + (width * 0.1));
       const waitWidth = 9;
       const waitHeight = 13;
 
@@ -270,8 +260,8 @@ const drawEyes = (lookX = 0, lookY = 0, eyelidA = 10, eyelidB = eyelidA, waiting
 
     } else {
       // pupil
-      const pupilPosX = eye[0] + Math.round(pupilMoveX * pupilMoveXDistance)
-      const pupilPosY = Math.round(eye[1] + (width * 0.1)) + Math.round(pupilMoveY * pupilMoveYDistance);
+      const pupilPosX = eyePos.x + Math.round(eye.x * pupilMoveXDistance)
+      const pupilPosY = Math.round(eyePos.y + (width * 0.1)) + Math.round(eye.y * pupilMoveYDistance);
       // fillCircle(...pupilPos, Math.round(width * 0.2), 1);
       const pupilBorder = getCirclePixels(pupilPosX, pupilPosY, Math.round(width * 0.25), 1);
       const pupilPixels = getHorizonalLinesOfCircle(pupilBorder);
@@ -283,103 +273,64 @@ const drawEyes = (lookX = 0, lookY = 0, eyelidA = 10, eyelidB = eyelidA, waiting
     }
 
     // eyelids
-    const lidLineIndex = Math.min(Math.round(horLines.length * (eyelids[eyeIndex] / 100)), horLines.length - 1);
+    const lidLineIndex = Math.min(Math.round(horLines.length * (eye.eyelid / 100)), horLines.length - 1);
     const lidLine = horLines[lidLineIndex];
     const lidLines = horLines.slice(0, lidLineIndex);
     // lidLines.forEach((line) => drawLine(line[0][0], line[0][1], line[1][0], line[1][1], 0));
     fillShading(lidLines, 6, !eyeIndex);
     drawLine(lidLine[0][0], lidLine[0][1], lidLine[1][0], lidLine[1][1], 1);
 
-    const isWinking = eyelids[0] !== eyelids[1] && eyelids[eyeIndex] > eyelids[Number(!eyeIndex)];
-    // const isWinking = eyeIndex;
-    if (isWinking) {
-      // cheek
-      const cheekOutline = getEllipsePixels(eye[0], eye[1] + (height * 1.75), width * 1.2, height, 1, 4);
+    // cheek
+    if (eye.cheek) {
+      const cheekOutline = getEllipsePixels(eyePos.x, eyePos.y + (height * 1.75), width * 1.2, height, 1, 4);
       addPixels(cheekOutline);
       fill(cheekOutline, 0);
       fillRect(64 * eyeIndex, 64 - 5, 64, 64, 0);
+    }
 
-      // brow
-      const browOutline = getEllipsePixels(eye[0], eye[1] - (height * 1.7), width * 1.35, height, 1, 4);
+    // brow
+    if (eye.brow) {
+      const browOutline = getEllipsePixels(eyePos.x, eyePos.y - (height * 1.7), width * 1.35, height, 1, 4);
       addPixels(browOutline);
       fill(browOutline, 0);
       fillRect(64 * eyeIndex, 0, 64, 6, 0);
     }
   })
 };
-
-const blink = {
-  isBlinking: false,
-  isGoingDown: true,
-  startHeight: 25,
-  current: 25,
-  // speed: 7.5,
-  // speed: 4,
-  speed: 75,
-  frequency: 15,
-  blinksInARow: 0
-};
-const getBlinkValue = (loop) => {
-  if (blink.isBlinking && !blink.isGoingDown && blink.current <= blink.startHeight) {
-    // const isDoubleBlink = Math.floor(loop / blink.frequency) % 5 === 0 && blink.blinksInARow < 1;
-    const isDoubleBlink = false;
-    if (isDoubleBlink) {
-      blink.isBlinking = true;
-      blink.blinksInARow++;
-    } else {
-      blink.isBlinking = false;
-      blink.blinksInARow = 0;
-    }
-    blink.isGoingDown = true;
-    blink.current = 25;
-  }
-  if (!blink.isBlinking && Math.floor(loop + (blink.frequency * 0.5)) % blink.frequency === 0) {
-    blink.isBlinking = true;
-  }
-
-  if (blink.isBlinking) {
-    if (blink.isGoingDown) {
-      blink.current += blink.speed;
-    } else {
-      blink.current -= blink.speed;
-    }
-    blink.current = Math.max(blink.current, 0);
-    if (blink.current > 100) {
-      blink.current = Math.max(100 - (blink.current - 100), 0);
-      blink.isGoingDown = false;
-    }
-  }
-
-  return [blink.current, blink.current];
-};
-
-const look = {
-  x: -100,
-  y: 100,
-  movingX: 1,
-  movingY: -1.5,
-  position: 0,
-  speed: 1 / 8,
-};
-const getLookValues = ():number[] => {
-  look.position += look.speed;
-  look.position = look.position % 1;
-
-  const radius = 100;
-  look.x = 0 + Math.sin(look.position * 2 * Math.PI) * radius;
-  look.y = 0 - Math.cos(look.position * 2 * Math.PI) * radius;
-
-  return [look.x, look.y];
-};
-
-const areValuesDifferent = (a, b) => {
-  if (a.length !== b.length) return true;
-  return a.filter((v, i) => v !== b[i]).length !== 0;
-};
-
 const clearDisplay = () => {
   fillRect(0, 0, 128, 64, 0);
 };
+
+
+// Eye config tools
+const areEyesDifferent = (a:IEyeConfig[], b:IEyeConfig[]) => {
+  if (!a || !b || !a.length || !b.length || a.length !== b.length) return true;
+
+  return a.filter((eyeA, i) => {
+    let eyeB = b[i];
+    return Object.keys(eyeA)
+      .filter((key) => eyeA[key] !== eyeB[key])
+      .length !== 0;
+  }).length !== 0;
+};
+
+const makeEyeSafe = (eye:IEyeConfig) => {
+  eye = getDefaultEye(eye);
+  eye.x = Math.round(eye.x);
+  eye.y = Math.round(eye.y);
+  eye.eyelid = Math.round(eye.eyelid);
+  return eye;
+};
+
+const getDefaultEye = (overwrite:IEyeConfig = {}):IEyeConfig => ({
+  x: 0,
+  y: 0,
+  eyelid: 25,
+  brow: false,
+  cheek: false,
+  ...overwrite
+});
+
 
 
 // Pixel management
@@ -388,9 +339,7 @@ const getFreshScreen = () => {
   return new Array(128).fill(1)
     .map(() => new Array(64).fill(0));
 };
-
-
-const updateChangedPixels = () => {
+const updateChangedPixels = ():boolean => {
   const changed = [];
 
   screen.forEach((inner, x) => {
@@ -402,12 +351,17 @@ const updateChangedPixels = () => {
   });
 
   console.log('# of pixels changed:', changed.length);
+  const hasAnythingChanged:boolean = (changed.length > 0);
 
-  oled.drawPixel(changed, false);
-  oled.update();
+  if (hasAnythingChanged) {
+    oled.drawPixel(changed, false);
+    oled.update();
+  }
 
   previousScreen = screen;
   screen = getFreshScreen();
+
+  return hasAnythingChanged;
 };
 
 const addPixels = (newPixels) => {
@@ -430,35 +384,37 @@ const printScreen = (screen) => {
 
 // Main controls
 let loop = 0;
-let previousValues = [];
+let lastDrawn:number = 0;
+let lastChanged:number = 0;
+let previousEyes = [];
 
 let screen:any[][] = [[]];
 let previousScreen = [];
-// let timer;
 
 export const start = () => {
-  drawFrame(true);
+  drawFrame(undefined, true);
 };
 
-export const drawFrame = (waiting = false) => {
-  // const values = [...getLookValues(), ...getBlinkValue(loop)];
-  const values:any[] = [0, 0, 25, 25, waiting];
+export const drawFrame = (eyes:IEyeConfig[] = [getDefaultEye(), getDefaultEye()], waiting:boolean = false) => {
+  eyes = eyes.map(makeEyeSafe);
 
-
-  if (areValuesDifferent(previousValues, values)) {
-    console.log('eyes blink', loop);
-
+  const now = Date.now();
+  if ((waiting || areEyesDifferent(previousEyes, eyes)) && (now - lastChanged) > 1000) {
     // Set the pixels
     clearDisplay();
-    drawEyes(...values);
+    drawEyes(eyes, waiting);
 
     // Draw what changed
-    updateChangedPixels();
+    const haveAnyPixelsChanged = updateChangedPixels();
 
-    // Carry the state over for next iteration
-    previousValues = values;
+    if (!waiting && haveAnyPixelsChanged) {
+      // Carry the state over for next iteration
+      previousEyes = eyes;
+
+      lastChanged = now;
+    }
   }
 
+  lastDrawn = now;
   loop++;
-  // timer = setTimeout(() => drawFrame(), 750);
 };

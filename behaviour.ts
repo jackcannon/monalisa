@@ -55,14 +55,41 @@ const getLastLookedByDistances = (faces:IFacePoint[]):IFacePoint[] => {
 
 export const lookAt = (pick:IFacePoint) => {
   movement.lookRelativeDegrees(pick, 25);
+
+  const randomWink = Math.floor(Math.random() * 3) === 0;
+  const randomBlink = Math.floor(Math.random() * 25) === 0;
+  if (!lastLookedAt && randomWink) {
+    eyes.drawFrame([
+      {},
+      {
+        eyelid: 100,
+        brow: true,
+        cheek: true
+      }
+    ])
+  } else if (randomBlink) {
+    eyes.drawFrame([
+      {
+        eyelid: 100
+      },
+      {
+        eyelid: 100
+      }
+    ]);
+  } else {
+    eyes.drawFrame();
+  }
 };
 
 
 export const onFaces = (faces:IFacePoint[]) => {
   if (faces.length > 0) {
     onSeeingFaces(faces);
-  } else if (lastLookedAt && (Date.now() - lastLookedAt.lastSeen) > 1000) {
+  } else if (lastLookedAt && (Date.now() - lastLookedAt.lastSeen) > 2500) {
     lastLookedAt = null;
+    eyes.drawFrame();
+  } else {
+    eyes.drawFrame();
   }
 };
 
