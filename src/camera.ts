@@ -1,4 +1,4 @@
-import * as raspberryPiCamera from 'raspberry-pi-camera-native';
+import raspberryPiCamera from 'raspberry-pi-camera-native';
 import { createTimer, toFixed } from './utils';
 import { BehaviorSubject } from 'rxjs';
 import { filter, first } from 'rxjs/operators';
@@ -23,7 +23,7 @@ export const setup = async ():Promise<BehaviorSubject<IFacePoint[]>> => {
 
 const createWorker = ():Promise<any> => {
   return new Promise((resolve) => {
-    worker = new Worker('./worker-faceapi.js', {});
+    worker = new Worker('./dist/worker-faceapi.js', {});
     worker.on('message', (data) => {
       workerMsgs.next(data);
       if (data && data.type && data.type === 'init') {

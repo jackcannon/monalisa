@@ -19,7 +19,7 @@ parentPort.on('message', (msg) => {
 
 
 const setup = async () => {
-  await faceDetectionNet.loadFromDisk('./face-api/weights');
+  await faceDetectionNet.loadFromDisk('./src/face-api/weights');
   faceDetectionOptions = getFaceDetectorOptions(faceDetectionNet, { minFaceSize, scaleFactor: 0.8 })
   parentPort.postMessage({type: 'init'});
 };

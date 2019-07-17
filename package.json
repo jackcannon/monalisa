@@ -1,11 +1,13 @@
 {
-  "name": "arduino-test",
+  "name": "mona-lisa",
   "version": "1.0.0",
   "description": "",
-  "main": "test1.js",
+  "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "ts-node index.ts"
+    "build": "sh build.sh",
+    "start": "sudo node dist/index.js",
+    "reset": "sudo node dist/reset.js",
+    "complete": "npm run build && npm run start"
   },
   "author": "",
   "license": "ISC",
@@ -15,14 +17,10 @@
     "face-api.js": "^0.20.1",
     "johnny-five": "^1.1.0",
     "oled-js": "^5.0.0",
-    "pi-camera": "^1.2.1",
-    "pi-camera-connect": "^0.2.0",
     "raspberry-pi-camera-native": "0.0.0",
     "raspi-io": "^10.0.2",
     "rxjs": "^6.5.2",
-    "tiny-pi-camera": "^1.2.3",
     "ts-node": "^8.3.0",
-    "typescript": "^3.5.3",
-    "worker-farm": "^1.7.0"
+    "typescript": "^3.5.3"
   }
 }
