@@ -1,14 +1,26 @@
-const five = require("johnny-five");
-const Raspi = require("raspi-io").RaspiIO;
-const board = new five.Board({
-  io: new Raspi()
-});
 console.log('a');
 
-board.on("ready", () => {
-  console.log('ready');
-  // Create an Led on pin 13
-  const led = new five.Led(13);
+const Raspi = require('raspi-io').RaspiIO;
 
-  led.blink(500);
+console.log('b');
+
+const five = require('johnny-five');
+
+console.log('c');
+
+const io = new Raspi();
+
+console.log('d');
+const board = new five.Board({
+  io
+});
+
+console.log('e');
+
+board.on('ready', () => {
+  console.log('f ready');
+
+  // Create an Led on pin 7 (GPIO4) on P1 and strobe it on/off
+  // Optionally set the speed; defaults to 100ms
+  (new five.Led('P1-7')).strobe();
 });

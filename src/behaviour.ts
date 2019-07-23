@@ -4,6 +4,7 @@ import * as eyes from './eyes';
 import { BehaviorSubject } from 'rxjs';
 import { first, filter } from 'rxjs/operators';
 import { distanceBetweenPoints } from './utils';
+import { movementSpeed } from './config';
 
 let facesSubject:BehaviorSubject<IFacePoint[]>;
 let count = 0;
@@ -54,7 +55,7 @@ const getLastLookedByDistances = (faces:IFacePoint[]):IFacePoint[] => {
 }
 
 export const lookAt = (pick:IFacePoint) => {
-  movement.lookRelativeDegrees(pick, 25);
+  movement.easeRelativeDegrees(pick, movementSpeed);
 
   const randomWink = Math.floor(Math.random() * 3) === 0;
   const randomBlink = Math.floor(Math.random() * 25) === 0;

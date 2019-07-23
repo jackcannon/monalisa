@@ -1,10 +1,16 @@
+// ----------------------------
+//
+//    CAMERA / FACE DETECTION
+//
+// ----------------------------
+
 // Standard RaspiCam
-// export const FOVX = 70;
-// export const FOVY = 60;
+export const FOVX = 70;
+export const FOVY = 60;
 
 // Magnetic Wide Angle 0.65x Lens
-export const FOVX = 95;
-export const FOVY = 70;
+// export const FOVX = 95;
+// export const FOVY = 70;
 
 // Magnetic Super Fisheye Lens
 // export const FOVX = 120;
@@ -14,7 +20,12 @@ export const detectSingleFace = false;
 
 export const savePhotoOnDetection = false;
 
-export const faceDetectMinFaceSize = 45; // higher = faster, lower = smaller/further-away faces
+// higher = faster, lower = smaller/further-away faces
+// export const faceDetectMinFaceSize = 45;
+// export const faceDetectMinFaceSize = 50;
+// export const faceDetectMinFaceSize = 55;
+// export const faceDetectMinFaceSize = 60;
+export const faceDetectMinFaceSize = 65;
 
 const ratio = 480 / 640;
 // const width = 640;
@@ -29,4 +40,13 @@ export const cameraOptions = {
   fps: 20,
   encoding: 'JPEG',
   quality: 95
-}
+};
+
+// ----------------------------
+//
+//    MOVEMENT
+//
+// ----------------------------
+
+// Speed. Higher = slower
+export const movementSpeed = 40;
