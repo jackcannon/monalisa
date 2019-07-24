@@ -64,7 +64,7 @@ const getDurationFromSpeed = (pos:IPoint, speed:number = 20) => {
 }
 
 // Speed. Higher = slower
-export const look = (pos:IPoint = {x: 90, y: 90}, speed?:number) => {
+export const look = (pos:IPoint = {x: 90, y: 90}, speed?:number):Promise<any> => {
   const duration = getDurationFromSpeed(pos, speed);
   return Promise.all([
     move('base', pos.x, duration),
@@ -72,7 +72,7 @@ export const look = (pos:IPoint = {x: 90, y: 90}, speed?:number) => {
   ]);
 };
 
-const queueEaseAnimation = (animation:Animation, fromVal:number, toVal:number, duration:number) =>
+const queueEaseAnimation = (animation:Animation, fromVal:number, toVal:number, duration:number):Promise<any> =>
   new Promise((resolve, reject) => {
     animation.enqueue({
       duration,
@@ -88,7 +88,7 @@ const queueEaseAnimation = (animation:Animation, fromVal:number, toVal:number, d
   });
 
 // Speed. Higher = slower
-export const ease = (pos:IPoint = {x: 90, y: 90}, speed:number = 20) => {
+export const ease = (pos:IPoint = {x: 90, y: 90}, speed:number = 20):Promise<any> => {
   current = current.then(() => {
     // animationX.stop();
     // animationY.stop();
@@ -108,12 +108,12 @@ export const getCurrent = () => ({
 });
 
 // Speed. Higher = slower
-export const lookRelativeDegrees = (posCardinal:IPoint = {x: 0.5, y: 0.5}, speed?:number) => {
+export const lookRelativeDegrees = (posCardinal:IPoint = {x: 0.5, y: 0.5}, speed?:number):Promise<any> => {
   const pos = cardinalToDegrees(posCardinal);
   return look(pos, speed);
 };
 
-export const moveRelativeDegrees = (posCardinal:IPoint = {x: 0.5, y: 0.5}, duration:number = 10) => {
+export const moveRelativeDegrees = (posCardinal:IPoint = {x: 0.5, y: 0.5}, duration:number = 10):Promise<any> => {
   const pos = cardinalToDegrees(posCardinal);
   return Promise.all([
     move('base', pos.x, duration),
@@ -122,10 +122,17 @@ export const moveRelativeDegrees = (posCardinal:IPoint = {x: 0.5, y: 0.5}, durat
 };
 
 // Speed. Higher = slower
-export const easeRelativeDegrees = (posCardinal:IPoint = {x: 0.5, y: 0.5}, speed?:number) => {
+export const easeRelativeDegrees = (posCardinal:IPoint = {x: 0.5, y: 0.5}, speed?:number):Promise<any> => {
   const pos = cardinalToDegrees(posCardinal);
   return ease(pos, speed);
 };
+
+export const getDistance = (posCardinal:IPoint = {x: 0.5, y: 0.5}):number => {
+  const pos = cardinalToDegrees(posCardinal);
+  const current = getCurrent();
+  const distance = distanceBetweenPoints(pos, current);
+  return distance;
+}
 
 const cardinalToDegrees = (pos:IPoint, baseDegrees = {x: centrePosX, y: centrePosY}) => ({
   x: toFixed((baseDegrees.x - (FOVX / 2)) + ((1 - pos.x) * FOVX), 1),

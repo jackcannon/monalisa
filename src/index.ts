@@ -13,7 +13,7 @@ const board:any = new Board({
 });
 
 board.on('ready', async () => {
-  eyes.setup(board);
+  await eyes.setup(board);
   eyes.start();
   movement.setup();
   const faceSubject = await camera.setup();

@@ -50,3 +50,16 @@ export const cameraOptions = {
 
 // Speed. Higher = slower
 export const movementSpeed = 40;
+
+// Don't blink if moving more distance than this
+export const dontBlinkDistanceThreshold = 1;
+
+
+// ----------------------------
+//
+//    BEHAVIOUR
+//
+// ----------------------------
+
+export const durationLookingAtEachFace = 5000;
+export const durationBeforeForgettingFace = 2500;

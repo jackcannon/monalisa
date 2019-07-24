@@ -4,6 +4,7 @@
     "src/reset.ts",
     "src/worker-faceapi.ts",
     "src/worker-pico.ts",
+    "src/worker-eyes.ts",
     "src/face-api/**/*.ts",
     "src/face-api/**/*.json",
   ],

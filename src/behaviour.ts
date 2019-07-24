@@ -4,7 +4,7 @@ import * as eyes from './eyes';
 import { BehaviorSubject } from 'rxjs';
 import { first, filter } from 'rxjs/operators';
 import { distanceBetweenPoints } from './utils';
-import { movementSpeed } from './config';
+import { movementSpeed, dontBlinkDistanceThreshold, durationLookingAtEachFace, durationBeforeForgettingFace } from './config';
 
 let facesSubject:BehaviorSubject<IFacePoint[]>;
 let count = 0;
@@ -55,11 +55,16 @@ const getLastLookedByDistances = (faces:IFacePoint[]):IFacePoint[] => {
 }
 
 export const lookAt = (pick:IFacePoint) => {
-  movement.easeRelativeDegrees(pick, movementSpeed);
+  const distance = movement.getDistance(pick);
+  movement.easeRelativeDegrees(pick, movementSpeed)
+    .then(() => eyesAfterLook(distance));
+};
 
+const eyesAfterLook = (distance) => {
+  const notMoved = distance < dontBlinkDistanceThreshold;
   const randomWink = Math.floor(Math.random() * 3) === 0;
   const randomBlink = Math.floor(Math.random() * 25) === 0;
-  if (!lastLookedAt && randomWink) {
+  if (notMoved && !lastLookedAt && randomWink) {
     eyes.drawFrame([
       {},
       {
@@ -68,7 +73,7 @@ export const lookAt = (pick:IFacePoint) => {
         cheek: true
       }
     ])
-  } else if (randomBlink) {
+  } else if (notMoved && randomBlink) {
     eyes.drawFrame([
       {
         eyelid: 100
@@ -80,13 +85,14 @@ export const lookAt = (pick:IFacePoint) => {
   } else {
     eyes.drawFrame();
   }
-};
+}
 
 
 export const onFaces = (faces:IFacePoint[]) => {
   if (faces.length > 0) {
     onSeeingFaces(faces);
-  } else if (lastLookedAt && (Date.now() - lastLookedAt.lastSeen) > 2500) {
+    return;
+  } else if (lastLookedAt && (Date.now() - lastLookedAt.lastSeen) > durationBeforeForgettingFace) {
     lastLookedAt = null;
     eyes.drawFrame();
   } else {
@@ -107,7 +113,7 @@ const onSeeingFaces = (faces:IFacePoint[]) => {
 
     const timeSince = Date.now()
 
-    if (lastLookedAt && (Date.now() - lastLookedAt.firstSeen) > 5000) {
+    if (lastLookedAt && (Date.now() - lastLookedAt.firstSeen) > durationLookingAtEachFace) {
       const otherFaces = lastLookedByDistances.slice(1);
       pick = otherFaces[Math.floor(Math.random() * otherFaces.length)];
       wasPickLastLookedAt = false;
