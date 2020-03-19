@@ -27,3 +27,5 @@ export const distanceBetweenPoints = (pointA, pointB):number => {
   const distanceY = Math.abs(pointA.y - pointB.y);
   return Math.sqrt(Math.pow(distanceX, 2) + Math.pow(distanceY, 2));
 };
+
+export const randomID = () => 1000000 + Math.floor(Math.random() * 9000000)

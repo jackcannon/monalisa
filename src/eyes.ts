@@ -53,7 +53,9 @@ export const setup = async (board) => {
 }
 
 export const reset = () => {
-  worker.postMessage({type: 'reset'});
+  // worker.postMessage({type: 'reset'});
+  oled.fillRect(0, 0, 128, 64, 0);
+  oled.turnOffDisplay();
 };
 
 const drawChangedPixels = (changed) => {

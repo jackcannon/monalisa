@@ -1,55 +1,75 @@
-import { IFacePoint, ILookedAt } from './interfaces';
-import * as movement from './movement';
-import * as eyes from './eyes';
-import { BehaviorSubject } from 'rxjs';
-import { first, filter } from 'rxjs/operators';
-import { distanceBetweenPoints } from './utils';
-import { movementSpeed, dontBlinkDistanceThreshold, durationLookingAtEachFace, durationBeforeForgettingFace } from './config';
-import { update } from '@tensorflow/tfjs-layers/dist/variables';
+import { IFacePoint, ILookedAt, IPoint } from "./interfaces";
+import * as movement from "./movement";
+import * as eyes from "./eyes";
+import { BehaviorSubject } from "rxjs";
+import { first, filter } from "rxjs/operators";
+import { distanceBetweenPoints, delay, toFixed, randomID } from "./utils";
+import {
+  movementSpeed,
+  dontBlinkDistanceThreshold,
+  durationLookingAtEachFace,
+  durationBeforeForgettingFace,
+  movementSpeedCasual,
+  lookRandomlyAtSomethingDurationBase,
+  lookRandomlyAtSomethingDurationRandom
+} from "./config";
 
 enum EYE_TYPE {
-  LOOKING_AT_FACE = 'lookingAtFace',
-  NOT_LOOKING = 'notLooking',
-  BLINKING = 'blinking',
-  WINKING = 'winking',
+  LOOKING_AT_FACE = "lookingAtFace",
+  NOT_LOOKING = "notLooking",
+  BLINKING = "blinking",
+  WINKING = "winking"
 }
 
-let facesSubject:BehaviorSubject<IFacePoint[]>;
+let facesSubject: BehaviorSubject<IFacePoint[]>;
 let count = 0;
-let lastLookedAt:ILookedAt = {
+let lastLookedAt: ILookedAt = {
   face: null,
   firstSeen: null,
   lastSeen: Date.now(),
   count: 1,
   otherFaces: []
-}
+};
+let lookingAroundRandomly: number = null;
 
-export const setup = (subject:BehaviorSubject<IFacePoint[]>) => {
+export const setup = (subject: BehaviorSubject<IFacePoint[]>) => {
   facesSubject = subject;
 
   facesSubject
-    .pipe(filter((faces) => !!(faces)))
-    .subscribe((faces:IFacePoint[]) => onFaces(faces));
+    .pipe(filter(faces => !!faces))
+    .subscribe((faces: IFacePoint[]) => onFaces(faces));
 
-    facesSubject
-      .pipe(first())
-      .subscribe(() => {
-        eyes.drawFrame();
-      })
+  facesSubject.pipe(first()).subscribe(() => {
+    eyes.drawFrame();
+  });
 };
 
-export const drawEyes = (type:EYE_TYPE) => {
+export const drawEyes = (
+  type: EYE_TYPE,
+  eyeDirection: IPoint = { x: 0.5, y: 0.5 }
+) => {
+  eyeDirection = {
+    x: toFixed((eyeDirection.x * 2 - 1) * 0.8 * -1, 4),
+    y: toFixed((eyeDirection.y * 2 - 1) * 0.8 + 0.1, 4)
+  };
   switch (type) {
     case EYE_TYPE.LOOKING_AT_FACE:
-      eyes.drawFrame([
-        { eyelid: 20 },
-        { eyelid: 20 }
-      ]);
+      eyes.drawFrame([{ eyelid: 18 }, { eyelid: 18 }]);
       return;
     case EYE_TYPE.NOT_LOOKING:
       eyes.drawFrame([
-        { eyelid: 30 },
-        { eyelid: 30 }
+        {
+          eyelid: 32,
+          // brow: true,
+          cheek: true,
+          ...eyeDirection
+        },
+        {
+          eyelid: 32,
+          // brow: true,
+          cheek: true,
+          ...eyeDirection
+        }
       ]);
       return;
     case EYE_TYPE.WINKING:
@@ -63,22 +83,23 @@ export const drawEyes = (type:EYE_TYPE) => {
       ]);
       return;
     case EYE_TYPE.BLINKING:
-      eyes.drawFrame([
-        { eyelid: 100 },
-        { eyelid: 100 }
-      ]);
+      eyes.drawFrame([{ eyelid: 100 }, { eyelid: 100 }]);
       return;
   }
-}
+};
 
 export const resetLookedAt = () => {
   lastLookedAt.face = null;
   lastLookedAt.firstSeen = null;
   lastLookedAt.count = 1;
   lastLookedAt.otherFaces = [];
-}
+};
 
-export const updateLookedAt = (pick:IFacePoint, faces?:IFacePoint[], sameFace?:boolean) => {
+export const updateLookedAt = (
+  pick: IFacePoint,
+  faces?: IFacePoint[],
+  sameFace?: boolean
+) => {
   if (!pick) {
     lastLookedAt.face = null;
     lastLookedAt.count += 1;
@@ -89,7 +110,7 @@ export const updateLookedAt = (pick:IFacePoint, faces?:IFacePoint[], sameFace?:b
     lastLookedAt.firstSeen = Date.now();
     lastLookedAt.lastSeen = Date.now();
     lastLookedAt.count = 1;
-    lastLookedAt.otherFaces = faces.filter((face) => face !== pick);
+    lastLookedAt.otherFaces = faces.filter(face => face !== pick);
     return;
   }
   if (sameFace) {
@@ -100,24 +121,54 @@ export const updateLookedAt = (pick:IFacePoint, faces?:IFacePoint[], sameFace?:b
     lastLookedAt.firstSeen = Date.now();
   }
   lastLookedAt.face = pick;
-  lastLookedAt.otherFaces = faces.filter((face) => face !== pick);
+  lastLookedAt.otherFaces = faces.filter(face => face !== pick);
 };
 
 // Determine which of the current faces is most likely to be the last looked at
-const getLastLookedByDistances = (faces:IFacePoint[]):IFacePoint[] => {
+const getLastLookedByDistances = (faces: IFacePoint[]): IFacePoint[] => {
   if (!lastLookedAt.face) return faces;
-  const distances = faces.map((face) => distanceBetweenPoints(lastLookedAt.face, face));
-  const sorted = faces.sort((a, b) => distances[faces.indexOf(a)] - distances[faces.indexOf(b)]);
+  const distances = faces.map(face =>
+    distanceBetweenPoints(lastLookedAt.face, face)
+  );
+  const sorted = faces.sort(
+    (a, b) => distances[faces.indexOf(a)] - distances[faces.indexOf(b)]
+  );
   return sorted;
-}
+};
 
-export const lookAt = (pick:IFacePoint) => {
+export const lookAt = (pick: IFacePoint) => {
   const distance = movement.getDistance(pick);
-  movement.easeRelativeDegrees(pick, movementSpeed)
+  movement
+    .easeRelativeDegrees(pick, movementSpeed)
     .then(() => eyesAfterLook(distance));
 };
 
-const eyesAfterLook = (distance) => {
+export const lookAroundRandomly = (): Promise<IPoint> => {
+  const lookID = randomID();
+  lookingAroundRandomly = lookID;
+  const direction: IPoint = {
+    x: toFixed(Math.random(), 3),
+    y: toFixed(Math.random(), 3)
+  };
+  const move = movement.easeRelativeDegrees(direction, movementSpeedCasual);
+
+  move
+    .then(() =>
+      delay(
+        lookRandomlyAtSomethingDurationBase +
+          Math.floor(Math.random() * lookRandomlyAtSomethingDurationRandom)
+      )
+    )
+    .then(() => {
+      if (lookID === lookingAroundRandomly) {
+        lookingAroundRandomly = null;
+      }
+    });
+
+  return move.then(() => direction);
+};
+
+const eyesAfterLook = distance => {
   const notMoved = distance < dontBlinkDistanceThreshold;
   const randomWink = Math.floor(Math.random() * 3) === 0;
   const randomBlink = Math.floor(Math.random() * 25) === 0;
@@ -128,26 +179,37 @@ const eyesAfterLook = (distance) => {
   } else {
     drawEyes(EYE_TYPE.LOOKING_AT_FACE);
   }
-}
+};
 
-
-export const onFaces = (faces:IFacePoint[]) => {
+export const onFaces = (faces: IFacePoint[]) => {
   if (faces.length > 0) {
     onSeeingFaces(faces);
+    lookingAroundRandomly = null;
     return;
-  } else if (lastLookedAt.face && (Date.now() - lastLookedAt.lastSeen) > durationBeforeForgettingFace) {
-    resetLookedAt()
+  } else if (
+    lastLookedAt.face &&
+    Date.now() - lastLookedAt.lastSeen > durationBeforeForgettingFace
+  ) {
+    resetLookedAt();
+    console.log("forgotten you");
   } else if (!lastLookedAt.face) {
     updateLookedAt(null);
   }
   if (lastLookedAt.face) {
-    drawEyes(EYE_TYPE.LOOKING_AT_FACE);
+    drawEyes(EYE_TYPE.LOOKING_AT_FACE); // didn't see this time, but still not forgotten
   } else {
-    drawEyes(EYE_TYPE.NOT_LOOKING);
+    // not seen anyone for a while
+    if (!lookingAroundRandomly) {
+      lookAroundRandomly().then(direction =>
+        drawEyes(EYE_TYPE.NOT_LOOKING, direction)
+      );
+      // } else {
+      //   drawEyes(EYE_TYPE.NOT_LOOKING);
+    }
   }
 };
 
-const onSeeingFaces = (faces:IFacePoint[]) => {
+const onSeeingFaces = (faces: IFacePoint[]) => {
   if (faces.length === 1) {
     // look at only person
     lookAt(faces[0]);
@@ -160,7 +222,10 @@ const onSeeingFaces = (faces:IFacePoint[]) => {
 
     const timeSince = Date.now();
 
-    if (lastLookedAt.face && (Date.now() - lastLookedAt.firstSeen) > durationLookingAtEachFace) {
+    if (
+      lastLookedAt.face &&
+      Date.now() - lastLookedAt.firstSeen > durationLookingAtEachFace
+    ) {
       const otherFaces = lastLookedByDistances.slice(1);
       pick = otherFaces[Math.floor(Math.random() * otherFaces.length)];
       wasPickLastLookedAt = false;

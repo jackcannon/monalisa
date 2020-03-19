@@ -18,7 +18,7 @@
     "johnny-five": "^1.1.0",
     "oled-js": "^5.0.0",
     "raspberry-pi-camera-native": "0.0.0",
-    "raspi-io": "^10.0.2",
+    "raspi-io": "^11.0.0",
     "rxjs": "^6.5.2",
     "ts-node": "^8.3.0",
     "typescript": "^3.5.3"
