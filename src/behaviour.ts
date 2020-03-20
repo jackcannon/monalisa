@@ -11,7 +11,8 @@ import {
   durationBeforeForgettingFace,
   movementSpeedCasual,
   lookRandomlyAtSomethingDurationBase,
-  lookRandomlyAtSomethingDurationRandom
+  lookRandomlyAtSomethingDurationRandom,
+  randomBlinking
 } from "./config";
 
 enum EYE_TYPE {
@@ -174,7 +175,7 @@ const eyesAfterLook = distance => {
   const randomBlink = Math.floor(Math.random() * 25) === 0;
   if (notMoved && !lastLookedAt.face && randomWink) {
     drawEyes(EYE_TYPE.WINKING);
-  } else if (notMoved && randomBlink) {
+  } else if (randomBlinking && notMoved && randomBlink) {
     drawEyes(EYE_TYPE.BLINKING);
   } else {
     drawEyes(EYE_TYPE.LOOKING_AT_FACE);
@@ -203,8 +204,8 @@ export const onFaces = (faces: IFacePoint[]) => {
       lookAroundRandomly().then(direction =>
         drawEyes(EYE_TYPE.NOT_LOOKING, direction)
       );
-      // } else {
-      //   drawEyes(EYE_TYPE.NOT_LOOKING);
+    } else {
+      drawEyes(EYE_TYPE.NOT_LOOKING);
     }
   }
 };

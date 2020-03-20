@@ -1,27 +1,32 @@
-import * as faceapi from 'face-api.js';
+import * as faceapi from "face-api.js";
 
 // export const faceDetectionNet = faceapi.nets.ssdMobilenetv1
 // export const faceDetectionNet = faceapi.nets.tinyFaceDetector
-export const faceDetectionNet = faceapi.nets.mtcnn
+export const faceDetectionNet = faceapi.nets.mtcnn;
 
 // SsdMobilenetv1Options
-const minConfidence = 0.5
+const minConfidence = 0.5;
 
 // TinyFaceDetectorOptions
-const inputSize = 416
-const scoreThreshold = 0.5
+const inputSize = 416;
+const scoreThreshold = 0.5;
 
 // MtcnnOptions
-const minFaceSize = 50
-const scaleFactor = 0.8
+const minFaceSize = 50;
+const scaleFactor = 0.8;
 
-export function getFaceDetectorOptions(net: faceapi.NeuralNetwork<any>, options) {
+export function getFaceDetectorOptions(
+  net: faceapi.NeuralNetwork<any>,
+  options
+) {
   return net === faceapi.nets.ssdMobilenetv1
     ? new faceapi.SsdMobilenetv1Options({ minConfidence })
-    : (net === faceapi.nets.tinyFaceDetector
-      ? new faceapi.TinyFaceDetectorOptions({ inputSize, scoreThreshold })
-      : new faceapi.MtcnnOptions(options)
-    )
+    : net === faceapi.nets.tinyFaceDetector
+    ? new faceapi.TinyFaceDetectorOptions({ inputSize, scoreThreshold })
+    : new faceapi.MtcnnOptions(options);
 }
 
-export const faceDetectionOptions = getFaceDetectorOptions(faceDetectionNet, { minFaceSize, scaleFactor })
+export const faceDetectionOptions = getFaceDetectorOptions(faceDetectionNet, {
+  minFaceSize,
+  scaleFactor
+});

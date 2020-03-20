@@ -26,8 +26,8 @@ export const savePhotoOnDetection = false;
 // export const faceDetectMinFaceSize = 55;
 // export const faceDetectMinFaceSize = 60;
 // export const faceDetectMinFaceSize = 65;
-// export const faceDetectMinFaceSize = 70;
-export const faceDetectMinFaceSize = 75;
+export const faceDetectMinFaceSize = 70;
+// export const faceDetectMinFaceSize = 75;
 // export const faceDetectMinFaceSize = 80;
 // export const faceDetectMinFaceSize = 85;
 // export const faceDetectMinFaceSize = 90;
@@ -38,8 +38,8 @@ const ratio = 480 / 640;
 // const width = 640;
 // const width = 480;
 // const width = 320;
-// const width = 280;
-const width = 240;
+const width = 280;
+// const width = 240;
 
 export const cameraOptions = {
   width,
@@ -72,6 +72,8 @@ export const dontBlinkDistanceThreshold = 1;
 
 export const durationLookingAtEachFace = 5000;
 export const durationBeforeForgettingFace = 4000;
+
+export const randomBlinking = false;
 
 export const lookRandomlyAtSomethingDurationBase = 5000;
 export const lookRandomlyAtSomethingDurationRandom = 5000;

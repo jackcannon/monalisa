@@ -12,7 +12,7 @@ export interface ILookedAt {
   firstSeen: number;
   lastSeen: number;
   count: number;
-  otherFaces?:IFacePoint[];
+  otherFaces?: IFacePoint[];
 }
 
 export interface IEyeConfig {
