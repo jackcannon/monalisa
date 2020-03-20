@@ -7,7 +7,7 @@ import {
 } from "./face-api/examples-nodejs/commons";
 import { IFacePoint } from "./interfaces";
 import { toFixed } from "./utils";
-import { parentPort, isMainThread } from "worker_threads";
+import { parentPort, isMainThread, threadId } from "worker_threads";
 import {
   cameraOptions,
   savePhotoOnDetection,
@@ -33,6 +33,7 @@ const setup = async () => {
     minFaceSize,
     scaleFactor: 0.8
   });
+  console.log("worker - all setup", threadId);
   parentPort.postMessage({ type: "init" });
 };
 

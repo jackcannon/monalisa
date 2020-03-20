@@ -27,8 +27,10 @@ const createWorker = (): Promise<any> => {
   return new Promise(resolve => {
     worker = new Worker("./dist/worker-faceapi.js", {});
     worker.on("message", data => {
+      console.log("camera worker started");
       workerMsgs.next(data);
       if (data && data.type && data.type === "init") {
+        // console.log(worker);
         resolve();
       }
     });
@@ -42,9 +44,9 @@ const startCamera = (): Promise<any> => {
 };
 
 const runCamera = (): Promise<any> => {
-  const timer = createTimer("frame");
+  // const timer = createTimer("frame");
   raspberryPiCamera.on("frame", (buffer: Buffer) => {
-    timer();
+    // timer();
     framesSubject.next(buffer);
   });
   return framesSubject.pipe(first(frame => !!frame)).toPromise();
@@ -63,11 +65,13 @@ const startProcessing = () => {
     .pipe(filter(({ type }) => type === "points"))
     .subscribe(({ points }) => {
       pointsSubject.next(points);
-      // timer(points.map((point) => ({
-      //   x: toFixed(point.x, 2),
-      //   y: toFixed(point.y, 2),
-      //   score: point.score
-      // })));
+      timer(
+        points.map(point => ({
+          x: toFixed(point.x, 2),
+          y: toFixed(point.y, 2),
+          score: point.score
+        }))
+      );
       runProcess();
     });
 
