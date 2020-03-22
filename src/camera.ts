@@ -15,6 +15,11 @@ let framesSubject: BehaviorSubject<Buffer> = new BehaviorSubject<Buffer>(null);
 let worker: Worker;
 let workerMsgs: BehaviorSubject<any> = new BehaviorSubject<any>(null);
 
+// const workerPath = "./dist/worker-faceapi.js";
+const workerPath = "./dist/worker-opencv.js";
+
+const sentTimes = [];
+
 export const setup = async (): Promise<BehaviorSubject<IFacePoint[]>> => {
   await createWorker();
   await startCamera();
@@ -27,7 +32,7 @@ export const setup = async (): Promise<BehaviorSubject<IFacePoint[]>> => {
 
 const createWorker = (): Promise<any> => {
   return new Promise(resolve => {
-    worker = new Worker("./dist/worker-faceapi.js", {});
+    worker = new Worker(workerPath, {});
     worker.on("message", data => {
       workerMsgs.next(data);
       if (data && data.type && data.type === "init") {
@@ -45,10 +50,10 @@ const startCamera = (): Promise<any> => {
 };
 
 const runCamera = (): Promise<any> => {
-  const timer = createTimer("frame");
+  // const timer = createTimer("frame");
   raspberryPiCamera.on("frame", (buffer: Buffer) => {
-    const timeTaken = timer();
-    log.log("frame " + timeTaken);
+    // const timeTaken = timer();
+    // log.log("frame " + timeTaken);
 
     framesSubject.next(buffer);
     // runProcess();
@@ -64,7 +69,8 @@ const runProcess = () => {
     buffer: framesSubject.value,
     count: sendCount++
   };
-  log.log("sending " + sendCount);
+  // log.log("sending " + sendCount);
+  sentTimes[sendCount] = Date.now();
   worker.postMessage(msg);
 };
 const startListening = () => {
@@ -86,5 +92,13 @@ const startListening = () => {
       updateFaces(displayPoints, delta);
 
       runProcess();
+    });
+
+  workerMsgs
+    .pipe(filter(({ type }) => type === "receipt"))
+    .subscribe(({ count }) => {
+      if (sentTimes[count]) {
+        log.log("receipt", count, Date.now() - sentTimes[count]);
+      }
     });
 };

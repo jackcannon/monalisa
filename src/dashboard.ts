@@ -59,11 +59,15 @@ if (showDashboard) {
   const grid = new contrib.grid({ rows: 12, cols: 12, screen: scrn });
 
   // SETUP GRID
-  log = grid.set(3, 0, 6, 6, contrib.log, {
+  const dashLog = grid.set(3, 0, 6, 6, contrib.log, {
     fg: [128, 128, 128],
     selectedFg: [128, 128, 128],
     label: "Main Log"
   });
+  log = {
+    log: (...args) => dashLog.log(args.join(" "))
+  };
+
   detectionLine = grid.set(0, 7, 9, 5, contrib.line, {
     style: {
       line: "yellow",

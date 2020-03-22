@@ -19,6 +19,7 @@
     "face-api.js": "^0.20.1",
     "johnny-five": "^1.1.0",
     "oled-js": "^5.0.0",
+    "opencv": "^7.0.0",
     "raspberry-pi-camera-native": "0.0.0",
     "raspi-io": "^11.0.0",
     "rxjs": "^6.5.2",
