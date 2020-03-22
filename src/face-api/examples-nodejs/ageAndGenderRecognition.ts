@@ -35,7 +35,7 @@ async function run() {
   });
 
   saveFile("ageAndGenderRecognition.jpg", out.toBuffer("image/jpeg"));
-  console.log("done, saved results to out/ageAndGenderRecognition.jpg");
+  // console.log("done, saved results to out/ageAndGenderRecognition.jpg");
 }
 
 run();

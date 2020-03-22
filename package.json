@@ -13,6 +13,8 @@
   "license": "ISC",
   "dependencies": {
     "@tensorflow/tfjs-node": "^1.2.3",
+    "blessed": "^0.1.81",
+    "blessed-contrib": "^4.8.19",
     "canvas": "^2.5.0",
     "face-api.js": "^0.20.1",
     "johnny-five": "^1.1.0",

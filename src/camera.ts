@@ -5,6 +5,7 @@ import { filter, first } from "rxjs/operators";
 import { IFacePoint } from "./interfaces";
 import { Worker, isMainThread, parentPort, workerData } from "worker_threads";
 import { cameraOptions } from "./config";
+import { log, addFaceDetectionTime, updateFaces } from "./dashboard";
 
 let pointsSubject: BehaviorSubject<IFacePoint[]> = new BehaviorSubject<
   IFacePoint[]
@@ -27,10 +28,9 @@ const createWorker = (): Promise<any> => {
   return new Promise(resolve => {
     worker = new Worker("./dist/worker-faceapi.js", {});
     worker.on("message", data => {
-      console.log("camera worker started");
       workerMsgs.next(data);
       if (data && data.type && data.type === "init") {
-        // console.log(worker);
+        // log.log(worker);
         resolve();
       }
     });
@@ -48,30 +48,40 @@ const runCamera = (): Promise<any> => {
   raspberryPiCamera.on("frame", (buffer: Buffer) => {
     // timer();
     framesSubject.next(buffer);
+    // runProcess();
   });
   return framesSubject.pipe(first(frame => !!frame)).toPromise();
 };
 
+let sendCount = 0;
+
 const runProcess = () => {
   const msg = {
     type: "detect",
-    buffer: framesSubject.value
+    buffer: framesSubject.value,
+    count: sendCount++
   };
+  log.log("sending " + sendCount);
   worker.postMessage(msg);
 };
 const startProcessing = () => {
   const timer = createTimer("points");
   workerMsgs
     .pipe(filter(({ type }) => type === "points"))
-    .subscribe(({ points }) => {
+    .subscribe(({ points, count }) => {
+      log.log("receiving " + count);
       pointsSubject.next(points);
-      timer(
-        points.map(point => ({
-          x: toFixed(point.x, 2),
-          y: toFixed(point.y, 2),
-          score: point.score
-        }))
-      );
+
+      const delta = timer();
+      addFaceDetectionTime(delta);
+
+      const displayPoints = points.map(point => ({
+        x: toFixed(point.x, 2),
+        y: toFixed(point.y, 2),
+        score: point.score
+      }));
+      updateFaces(displayPoints, delta);
+
       runProcess();
     });
 

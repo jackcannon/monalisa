@@ -1,6 +1,7 @@
 import { Servo, Servos, Animation } from "johnny-five";
 import { IPoint } from "./interfaces";
 import { createTimer, toFixed, distanceBetweenPoints } from "./utils";
+import { log } from "./dashboard";
 
 import { FOVX, FOVY } from "./config";
 
@@ -59,7 +60,7 @@ const getDurationFromSpeed = (pos: IPoint, speed: number = 20) => {
   const current = getCurrent();
   const distance = distanceBetweenPoints(pos, current);
   const duration = distance * speed;
-  // console.log(`speed: ${toFixed(speed, 3)}, distance: ${toFixed(distance, 3)}, duration: ${toFixed(duration, 3)}`);
+  // log.log(`speed: ${toFixed(speed, 3)}, distance: ${toFixed(distance, 3)}, duration: ${toFixed(duration, 3)}`);
   return duration;
 };
 

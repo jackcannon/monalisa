@@ -2,11 +2,11 @@ export const createTimer = name => {
   const start = Date.now();
   let last = Date.now();
 
-  return function log(...args) {
+  return function(...args) {
     const now = Date.now();
     const diff = now - last;
     last = now;
-    console.log(`[${name}]`, diff, ...args);
+    return diff;
   };
 };
 
@@ -32,3 +32,27 @@ export const distanceBetweenPoints = (pointA, pointB): number => {
 };
 
 export const randomID = () => 1000000 + Math.floor(Math.random() * 9000000);
+
+export const formatAsciiNumbers = (str: string): string[] => {
+  const chars = {
+    "0": ["  ███  ", "██   ██", "██   ██", "██   ██", "  ███  "],
+    "1": ["   ██  ", "  ███  ", "   ██  ", "   ██  ", "███████"],
+    "2": ["  ███  ", "██   ██", "    ███", "  ██   ", "███████"],
+    "3": ["  ███  ", "██   ██", "    ██ ", "██   ██", "  ███  "],
+    "4": ["██  ██ ", "██  ██ ", "███████", "    ██ ", "    ██ "],
+    "5": ["███████", "██     ", "██████ ", "     ██", "██████ "],
+    "6": ["  ████ ", "██     ", "██████ ", "██   ██", "  ████ "],
+    "7": ["███████", "    ██ ", "  ██   ", " ██    ", "██     "],
+    "8": [" █████ ", "██   ██", " █████ ", "██   ██", " █████ "],
+    "9": ["  ████ ", "██   ██", " ██████", "     ██", "  ████ "],
+    ":": ["  ██  ", "  ██  ", "      ", "  ██  ", "  ██  "],
+    ".": ["      ", "      ", "      ", "  ██  ", "  ██  "]
+  };
+
+  return [0, 1, 2, 3, 4].map(row =>
+    str
+      .split("")
+      .map(char => chars[char][row])
+      .join("  ")
+  );
+};

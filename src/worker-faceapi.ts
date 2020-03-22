@@ -17,8 +17,6 @@ import {
 
 let faceDetectionOptions;
 
-console.log("worker started");
-
 parentPort.on("message", msg => {
   switch (msg.type) {
     case "detect":
@@ -33,16 +31,20 @@ const setup = async () => {
     minFaceSize,
     scaleFactor: 0.8
   });
-  console.log("worker - all setup", threadId);
   parentPort.postMessage({ type: "init" });
 };
 
-const handleDetectMsg = async (msg: { type: string; buffer: Uint8Array }) => {
+const handleDetectMsg = async (msg: {
+  type: string;
+  buffer: Uint8Array;
+  count: number;
+}) => {
   const buffer = Buffer.from(msg.buffer);
   const points = await detect(buffer);
   parentPort.postMessage({
     type: "points",
-    points
+    points,
+    count: msg.count
   });
 };
 
@@ -102,7 +104,7 @@ const saveOutput = async (img, detections) => {
     .substring(0, 19);
   const outputName = `photos/${now}.jpg`;
   saveFile(outputName, out.toBuffer("image/jpeg"));
-  console.log("done, saved results to", outputName);
+  // console.log("done, saved results to", outputName);
 };
 
 setup();

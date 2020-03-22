@@ -27,7 +27,7 @@ async function run() {
   );
 
   saveFile("faceLandmarkDetection.jpg", out.toBuffer("image/jpeg"));
-  console.log("done, saved results to out/faceLandmarkDetection.jpg");
+  // console.log("done, saved results to out/faceLandmarkDetection.jpg");
 }
 
 run();

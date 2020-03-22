@@ -13,7 +13,6 @@ const cascadefile =
 let facefinder_classify_region = function(r, c, s, pixels, ldim) {
   return -1.0;
 };
-console.log("worker started");
 
 interface IPicoDetection {
   x: number;
@@ -63,7 +62,7 @@ const detect = async (imgBuffer): Promise<IFacePoint[]> => {
 
   const dets = findFace(ctx);
   timer("findFaces");
-  console.log("dets", dets);
+  // console.log("dets", dets);
   return dets.map(convertToFacePoint);
 };
 

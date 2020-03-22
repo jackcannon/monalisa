@@ -26,7 +26,7 @@ async function run() {
   faceapi.draw.drawFaceExpressions(out, results);
 
   saveFile("faceExpressionRecognition.jpg", out.toBuffer("image/jpeg"));
-  console.log("done, saved results to out/faceExpressionRecognition.jpg");
+  // console.log("done, saved results to out/faceExpressionRecognition.jpg");
 }
 
 run();

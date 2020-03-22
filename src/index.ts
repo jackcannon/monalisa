@@ -4,6 +4,7 @@ import * as movement from "./movement";
 import * as camera from "./camera";
 import * as eyes from "./eyes";
 import * as behaviour from "./behaviour";
+import * as dashboard from "./dashboard";
 import { formatTime } from "./utils";
 
 const start = Date.now();
@@ -12,7 +13,14 @@ const board: any = new Board({
   io: new (RaspiIO as any)()
 });
 
+const shutdown = () => {
+  eyes.reset();
+  movement.reset();
+  dashboard.log.log("I've been alive for:", formatTime(Date.now() - start));
+};
+
 board.on("ready", async () => {
+  dashboard.setup(shutdown, start);
   await eyes.setup(board);
   eyes.start();
   movement.setup();
@@ -20,8 +28,6 @@ board.on("ready", async () => {
   behaviour.setup(faceSubject);
 
   board.on("exit", function() {
-    console.log("I've been alive for:", formatTime(Date.now() - start));
-    eyes.reset();
-    movement.reset();
+    shutdown();
   });
 });

@@ -401,7 +401,7 @@ const updateChangedPixels = (): boolean => {
     });
   });
 
-  console.log("# of pixels changed:", changed.length);
+  // console.log("# of pixels changed:", changed.length);
   const hasAnythingChanged: boolean = changed.length > 0;
 
   if (hasAnythingChanged) {
@@ -431,7 +431,7 @@ const printScreen = screen => {
     for (let y = 0; y < 64; y++) {
       str += "" + screen[x][y];
     }
-    console.log(str);
+    // console.log(str);
   }
 };
 

@@ -14,6 +14,7 @@ import {
   lookRandomlyAtSomethingDurationRandom,
   randomBlinking
 } from "./config";
+import { log } from "./dashboard";
 
 enum EYE_TYPE {
   LOOKING_AT_FACE = "lookingAtFace",
@@ -192,7 +193,7 @@ export const onFaces = (faces: IFacePoint[]) => {
     Date.now() - lastLookedAt.lastSeen > durationBeforeForgettingFace
   ) {
     resetLookedAt();
-    console.log("forgotten you");
+    log.log("forgotten you");
   } else if (!lastLookedAt.face) {
     updateLookedAt(null);
   }
