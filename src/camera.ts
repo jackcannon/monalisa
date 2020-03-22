@@ -1,7 +1,7 @@
 import raspberryPiCamera from "raspberry-pi-camera-native";
 import { createTimer, toFixed } from "./utils";
 import { BehaviorSubject } from "rxjs";
-import { filter, first } from "rxjs/operators";
+import { filter, first, delay } from "rxjs/operators";
 import { IFacePoint } from "./interfaces";
 import { Worker, isMainThread, parentPort, workerData } from "worker_threads";
 import { cameraOptions } from "./config";
@@ -19,7 +19,8 @@ export const setup = async (): Promise<BehaviorSubject<IFacePoint[]>> => {
   await createWorker();
   await startCamera();
   await runCamera();
-  startProcessing();
+  startListening();
+  runProcess();
 
   return pointsSubject;
 };
@@ -44,9 +45,11 @@ const startCamera = (): Promise<any> => {
 };
 
 const runCamera = (): Promise<any> => {
-  // const timer = createTimer("frame");
+  const timer = createTimer("frame");
   raspberryPiCamera.on("frame", (buffer: Buffer) => {
-    // timer();
+    const timeTaken = timer();
+    log.log("frame " + timeTaken);
+
     framesSubject.next(buffer);
     // runProcess();
   });
@@ -64,7 +67,7 @@ const runProcess = () => {
   log.log("sending " + sendCount);
   worker.postMessage(msg);
 };
-const startProcessing = () => {
+const startListening = () => {
   const timer = createTimer("points");
   workerMsgs
     .pipe(filter(({ type }) => type === "points"))
@@ -84,6 +87,4 @@ const startProcessing = () => {
 
       runProcess();
     });
-
-  runProcess();
 };

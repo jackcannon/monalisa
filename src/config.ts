@@ -24,7 +24,7 @@ export const FOVY = 60;
 // export const FOVX = 120;
 // export const FOVY = 80;
 
-export const detectSingleFace = false;
+export const detectSingleFace = true;
 
 export const savePhotoOnDetection = false;
 

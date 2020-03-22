@@ -40,23 +40,27 @@ const handleDetectMsg = async (msg: {
   count: number;
 }) => {
   const buffer = Buffer.from(msg.buffer);
-  const points = await detect(buffer);
+  const points = await detect(buffer, msg.count);
+  const { count } = msg;
   parentPort.postMessage({
     type: "points",
     points,
-    count: msg.count
+    count
   });
 };
 
-const detect = async (imgBuffer): Promise<IFacePoint[]> => {
+const detect = async (imgBuffer, count: number): Promise<IFacePoint[]> => {
   if (detectSingleFace) {
-    return await detectSingle(imgBuffer);
+    return await detectSingle(imgBuffer, count);
   } else {
-    return await detectMulti(imgBuffer);
+    return await detectMulti(imgBuffer, count);
   }
 };
 
-const detectSingle = async (imgBuffer): Promise<IFacePoint[]> => {
+const detectSingle = async (
+  imgBuffer,
+  count: number
+): Promise<IFacePoint[]> => {
   const img = await canvas.loadImage(imgBuffer as any);
   const detection = await faceapi.detectSingleFace(img, faceDetectionOptions);
   if (detection && savePhotoOnDetection) {
@@ -70,7 +74,7 @@ const detectSingle = async (imgBuffer): Promise<IFacePoint[]> => {
   );
 };
 
-const detectMulti = async (imgBuffer): Promise<IFacePoint[]> => {
+const detectMulti = async (imgBuffer, count: number): Promise<IFacePoint[]> => {
   const img = await canvas.loadImage(imgBuffer as any);
   const detections = await faceapi.detectAllFaces(img, faceDetectionOptions);
   if (detections.length && savePhotoOnDetection) {
