@@ -28,6 +28,3 @@ const start = num => {
 };
 
 setup(1);
-setup(2);
-setup(3);
-setup(4);

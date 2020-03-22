@@ -1,10 +1,16 @@
 import cv from "opencv";
+import { parentPort, isMainThread, threadId } from "worker_threads";
+import { BehaviorSubject } from "rxjs";
+
 import { IFacePoint } from "./interfaces";
 import { toFixed } from "./utils";
-import { parentPort, isMainThread, threadId } from "worker_threads";
 import { cameraOptions, savePhotoOnDetection } from "./config";
+import { getFrames } from "./cameraHelper";
 
 const dataPath = "./src/opencv/haarcascade_frontalface_alt.xml";
+
+let framesSubject: BehaviorSubject<Buffer> = null;
+let detectCount: number = 0;
 
 interface ICVBox {
   x: number;
@@ -13,36 +19,57 @@ interface ICVBox {
   height: number;
 }
 
-parentPort.on("message", msg => {
-  switch (msg.type) {
-    case "detect":
-      handleDetectMsg(msg);
-      break;
-  }
-});
+// parentPort.on("message", msg => {
+//   switch (msg.type) {
+//     case "detect":
+//       handleDetectMsg(msg);
+//       break;
+//   }
+// });
 
 const setup = async () => {
+  console.log("worker-opencv - setup - A");
+  framesSubject = await getFrames();
+  console.log("worker-opencv - setup - B");
+  await framesSubject.toPromise();
+  console.log("worker-opencv - setup - C");
   parentPort.postMessage({ type: "init" });
+  console.log("worker-opencv - setup - D");
 };
 
-const handleDetectMsg = async (msg: {
-  type: string;
-  buffer: Uint8Array;
-  count: number;
-}) => {
-  const { count } = msg;
-  parentPort.postMessage({
-    type: "receipt",
-    count: msg.count
-  });
-  const buffer = Buffer.from(msg.buffer);
-  const points = await detect(buffer, msg.count);
+const startProcessing = async () => {
+  console.log("worker-opencv - startProcessing - A");
+  const points = await detect(framesSubject.value);
+  console.log("worker-opencv - startProcessing - B");
+  detectCount++;
+  console.log("worker-opencv - startProcessing - C");
   parentPort.postMessage({
     type: "points",
     points,
-    count
+    count: detectCount
   });
+  console.log("worker-opencv - startProcessing - D");
+  startProcessing();
 };
+
+// const handleDetectMsg = async (msg: {
+//   type: string;
+//   buffer: Uint8Array;
+//   count: number;
+// }) => {
+//   const { count } = msg;
+//   parentPort.postMessage({
+//     type: "receipt",
+//     count: msg.count
+//   });
+//   const buffer = Buffer.from(msg.buffer);
+//   const points = await detect(buffer, msg.count);
+//   parentPort.postMessage({
+//     type: "points",
+//     points,
+//     count
+//   });
+// };
 
 const cvReadImage = imgBuffer =>
   new Promise((resolve, reject) => {
@@ -56,7 +83,7 @@ const cvDetectFaces = (im): Promise<ICVBox[]> =>
     );
   });
 
-const detect = async (imgBuffer, count: number): Promise<IFacePoint[]> => {
+const detect = async (imgBuffer): Promise<IFacePoint[]> => {
   const im = await cvReadImage(imgBuffer);
   const boxes = await cvDetectFaces(im);
   const faces = boxes.map(boxToPoint);

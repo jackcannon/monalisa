@@ -4,7 +4,7 @@
 //
 // ----------------------------
 
-export const showDashboard = true;
+export const showDashboard = false;
 
 // ----------------------------
 //

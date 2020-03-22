@@ -1,7 +1,7 @@
 import { Board } from "johnny-five";
 import { RaspiIO } from "raspi-io";
 import * as movement from "./movement";
-import * as camera from "./camera";
+import * as detection from "./detection";
 import * as eyes from "./eyes";
 import * as behaviour from "./behaviour";
 import * as dashboard from "./dashboard";
@@ -24,7 +24,7 @@ board.on("ready", async () => {
   await eyes.setup(board);
   eyes.start();
   movement.setup();
-  const faceSubject = await camera.setup();
+  const faceSubject = await detection.setup();
   behaviour.setup(faceSubject);
 
   board.on("exit", function() {
