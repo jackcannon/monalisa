@@ -1,6 +1,6 @@
 import cv from "opencv";
-import { parentPort, isMainThread, threadId } from "worker_threads";
 import { BehaviorSubject } from "rxjs";
+import { first } from "rxjs/operators";
 
 import { IFacePoint } from "./interfaces";
 import { toFixed } from "./utils";
@@ -10,6 +10,9 @@ import { log } from "./dashboard";
 
 const dataPath = "./src/opencv/haarcascade_frontalface_alt.xml";
 
+let pointsSubject: BehaviorSubject<IFacePoint[]> = new BehaviorSubject<
+  IFacePoint[]
+>(null);
 let framesSubject: BehaviorSubject<Buffer> = null;
 let detectCount: number = 0;
 
@@ -28,49 +31,22 @@ interface ICVBox {
 //   }
 // });
 
-const setup = async () => {
-  log.log("worker-opencv - setup - A");
+export const startDetection = async (): Promise<BehaviorSubject<
+  IFacePoint[]
+>> => {
   framesSubject = await getFrames();
-  log.log("worker-opencv - setup - B");
-  await framesSubject.toPromise();
-  log.log("worker-opencv - setup - C");
-  parentPort.postMessage({ type: "init" });
-  log.log("worker-opencv - setup - D");
+  await framesSubject.pipe(first()).toPromise();
+  startProcessing();
+  await pointsSubject.pipe(first()).toPromise();
+  return pointsSubject;
 };
 
-const startProcessing = async () => {
-  log.log("worker-opencv - startProcessing - A");
+export const startProcessing = async () => {
   const points = await detect(framesSubject.value);
-  log.log("worker-opencv - startProcessing - B");
   detectCount++;
-  log.log("worker-opencv - startProcessing - C");
-  parentPort.postMessage({
-    type: "points",
-    points,
-    count: detectCount
-  });
-  log.log("worker-opencv - startProcessing - D");
+  pointsSubject.next(points);
   startProcessing();
 };
-
-// const handleDetectMsg = async (msg: {
-//   type: string;
-//   buffer: Uint8Array;
-//   count: number;
-// }) => {
-//   const { count } = msg;
-//   parentPort.postMessage({
-//     type: "receipt",
-//     count: msg.count
-//   });
-//   const buffer = Buffer.from(msg.buffer);
-//   const points = await detect(buffer, msg.count);
-//   parentPort.postMessage({
-//     type: "points",
-//     points,
-//     count
-//   });
-// };
 
 const cvReadImage = imgBuffer =>
   new Promise((resolve, reject) => {
@@ -119,5 +95,3 @@ const saveOutput = async (im, faces) => {
   im.save(outputName);
   log.log("Image saved to " + outputName);
 };
-
-setup();

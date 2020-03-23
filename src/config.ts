@@ -4,7 +4,8 @@
 //
 // ----------------------------
 
-export const showDashboard = false;
+// WARNING: Dashboard slows everything down quite a bit.
+export const showDashboard = true;
 
 // ----------------------------
 //

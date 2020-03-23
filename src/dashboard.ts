@@ -238,8 +238,8 @@ export const updateFaces = (points, delta) => {
 
     scrn.render();
   } else {
-    const deltaDisplay = ("      " + delta).substr(-4);
-    log.log("Delta:", deltaDisplay, "  Faces:", JSON.stringify(points));
+    const buffer = " ".repeat(4 - delta.toString().length);
+    log.log("Delta:", buffer, delta, "  Faces:", JSON.stringify(points));
   }
 };
 

@@ -1,8 +1,5 @@
 const { workerData, parentPort, isMainThread } = require("worker_threads");
-// import { getFrames } from "../src/cameraHelper";
-import { Board } from "johnny-five";
-import { RaspiIO } from "raspi-io";
-
+import { runDashboard } from "./dashboard-test";
 console.log("start child");
 
 parentPort.on("message", ({ type, num }) => {
@@ -14,11 +11,7 @@ parentPort.on("message", ({ type, num }) => {
 });
 
 const start = num => {
-  // getFrames();
-
-  const board: any = new Board({
-    io: new (RaspiIO as any)()
-  });
+  runDashboard();
 
   // parentPort.postMessage({ type: "starting", num });
   // for (var i = 0; i < 1000000; i++) {
