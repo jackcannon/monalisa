@@ -2,6 +2,7 @@
   "include": [
     "src/index.ts",
     "src/reset.ts",
+    "src/child-dashboard.ts",
     "src/worker-faceapi.ts",
     "src/worker-opencv.ts",
     "src/worker-pico.ts",

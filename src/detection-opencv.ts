@@ -1,9 +1,8 @@
 import cv from "opencv";
 import { BehaviorSubject } from "rxjs";
-import { first } from "rxjs/operators";
 
 import { IFacePoint } from "./interfaces";
-import { toFixed } from "./utils";
+import { toFixed, getPromise } from "./utils";
 import { cameraOptions, savePhotoOnDetection } from "./config";
 import { getFrames } from "./cameraHelper";
 import { log } from "./dashboard";
@@ -23,21 +22,12 @@ interface ICVBox {
   height: number;
 }
 
-// parentPort.on("message", msg => {
-//   switch (msg.type) {
-//     case "detect":
-//       handleDetectMsg(msg);
-//       break;
-//   }
-// });
-
 export const startDetection = async (): Promise<BehaviorSubject<
   IFacePoint[]
 >> => {
   framesSubject = await getFrames();
-  await framesSubject.pipe(first()).toPromise();
   startProcessing();
-  await pointsSubject.pipe(first()).toPromise();
+  await getPromise(pointsSubject);
   return pointsSubject;
 };
 

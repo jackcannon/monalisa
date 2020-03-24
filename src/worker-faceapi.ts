@@ -14,6 +14,7 @@ import {
   detectSingleFace,
   faceDetectMinFaceSize as minFaceSize
 } from "./config";
+import { IWorkerInit, IWorkerDetect, IWorkerPoints } from "./type";
 
 let faceDetectionOptions;
 
@@ -31,72 +32,48 @@ const setup = async () => {
     minFaceSize,
     scaleFactor: 0.8
   });
-  parentPort.postMessage({ type: "init" });
+  parentPort.postMessage({ type: "init" } as IWorkerInit);
 };
 
-const handleDetectMsg = async (msg: {
-  type: string;
-  buffer: Uint8Array;
-  count: number;
-}) => {
+const handleDetectMsg = async (msg: IWorkerDetect) => {
   const buffer = Buffer.from(msg.buffer);
-  const points = await detect(buffer, msg.count);
-  const { count } = msg;
+  const points = await detect(buffer);
   parentPort.postMessage({
     type: "points",
-    points,
-    count
-  });
+    points
+  } as IWorkerPoints);
 };
 
-const detect = async (imgBuffer, count: number): Promise<IFacePoint[]> => {
+const detect = async (imgBuffer): Promise<IFacePoint[]> => {
   if (detectSingleFace) {
-    return await detectSingle(imgBuffer, count);
+    return await detectSingle(imgBuffer);
   } else {
-    return await detectMulti(imgBuffer, count);
+    return await detectMulti(imgBuffer);
   }
 };
 
-const detectSingle = async (
-  imgBuffer,
-  count: number
-): Promise<IFacePoint[]> => {
+const detectSingle = async (imgBuffer): Promise<IFacePoint[]> => {
   const img = await canvas.loadImage(imgBuffer as any);
   const detection = await faceapi.detectSingleFace(img, faceDetectionOptions);
   if (detection && savePhotoOnDetection) {
     saveOutput(img, [detection]);
   }
-  return (
-    [detection]
-      .filter(detection => detection)
-      // .filter((detection) => detection.score > 0.9)
-      .map(detectionToPoint)
-  );
+  return [detection].filter(detection => detection).map(detectionToPoint);
 };
 
-const detectMulti = async (imgBuffer, count: number): Promise<IFacePoint[]> => {
+const detectMulti = async (imgBuffer): Promise<IFacePoint[]> => {
   const img = await canvas.loadImage(imgBuffer as any);
   const detections = await faceapi.detectAllFaces(img, faceDetectionOptions);
   if (detections.length && savePhotoOnDetection) {
     saveOutput(img, detections);
   }
-  return (
-    detections
-      // .filter((detection) => detection.score > 0.9)
-      .map(detectionToPoint)
-  );
+  return detections.map(detectionToPoint);
 };
 
-const detectionToPoint = (detection: faceapi.FaceDetection): IFacePoint => ({
-  x: toFixed(
-    (detection.box.x + detection.box.width * 0.5) / cameraOptions.width,
-    6
-  ),
-  y: toFixed(
-    (detection.box.y + detection.box.height * 0.5) / cameraOptions.height,
-    6
-  ),
-  score: toFixed(detection.score, 6)
+const detectionToPoint = (d: faceapi.FaceDetection): IFacePoint => ({
+  x: toFixed((d.box.x + d.box.width * 0.5) / cameraOptions.width, 6),
+  y: toFixed((d.box.y + d.box.height * 0.5) / cameraOptions.height, 6),
+  score: toFixed(d.score, 6)
 });
 
 const saveOutput = async (img, detections) => {

@@ -1,11 +1,15 @@
+import { DETECTION_TYPE } from "./type";
+
 // ----------------------------
 //
-//           LOGGING
+//           MAIN
 //
 // ----------------------------
 
 // WARNING: Dashboard slows everything down quite a bit.
-export const showDashboard = true;
+export const showDashboard = false;
+export const detectionType = DETECTION_TYPE.FACEAPI;
+export const useWorker = true;
 
 // ----------------------------
 //

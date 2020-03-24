@@ -1,3 +1,6 @@
+import { BehaviorSubject } from "rxjs";
+import { first } from "rxjs/operators";
+
 export const createTimer = name => {
   const start = Date.now();
   let last = Date.now();
@@ -32,6 +35,9 @@ export const distanceBetweenPoints = (pointA, pointB): number => {
 };
 
 export const randomID = () => 1000000 + Math.floor(Math.random() * 9000000);
+
+export const getPromise = (subject: BehaviorSubject<any>): Promise<any> =>
+  subject.pipe(first(item => !!item)).toPromise();
 
 export const formatAsciiNumbers = (str: string): string[] => {
   const chars = {

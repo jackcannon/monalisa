@@ -1,9 +1,7 @@
 import raspberryPiCamera from "raspberry-pi-camera-native";
 import { BehaviorSubject } from "rxjs";
-import { first } from "rxjs/operators";
-import { IFacePoint } from "./interfaces";
 import { cameraOptions } from "./config";
-import { log } from "./dashboard";
+import { getPromise } from "./utils";
 
 let framesSubject: BehaviorSubject<Buffer> = new BehaviorSubject<Buffer>(null);
 
@@ -23,5 +21,5 @@ const runCamera = (): Promise<any> => {
   raspberryPiCamera.on("frame", (buffer: Buffer) => {
     framesSubject.next(buffer);
   });
-  return framesSubject.pipe(first(frame => !!frame)).toPromise();
+  return getPromise(framesSubject);
 };
