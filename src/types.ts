@@ -16,6 +16,42 @@ export enum OLED_COLOR {
   WHITE = 1
 }
 
+export enum MOVE_TYPE {
+  LOOK = "look",
+  EASE = "ease"
+}
+
+export enum EASE_TYPE {
+  linear = "linear",
+  inQuad = "inQuad",
+  outQuad = "outQuad",
+  inOutQuad = "inOutQuad",
+  inCube = "inCube",
+  outCube = "outCube",
+  inOutCube = "inOutCube",
+  inQuart = "inQuart",
+  outQuart = "outQuart",
+  inOutQuart = "inOutQuart",
+  inQuint = "inQuint",
+  outQuint = "outQuint",
+  inOutQuint = "inOutQuint",
+  inSine = "inSine",
+  outSine = "outSine",
+  inOutSine = "inOutSine",
+  inExpo = "inExpo",
+  outExpo = "outExpo",
+  inOutExpo = "inOutExpo",
+  inCirc = "inCirc",
+  outCirc = "outCirc",
+  inOutCirc = "inOutCirc",
+  inBack = "inBack",
+  outBack = "outBack",
+  inOutBack = "inOutBack",
+  inBounce = "inBounce",
+  outBounce = "outBounce",
+  inOutBounce = "inOutBounce"
+}
+
 // Worker messages
 export interface IWorkerMessage {
   type: string;

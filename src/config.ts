@@ -1,4 +1,4 @@
-import { DETECTION_TYPE, OLED_COLOR } from "./types";
+import { DETECTION_TYPE, OLED_COLOR, MOVE_TYPE, EASE_TYPE } from "./types";
 
 // ----------------------------
 //
@@ -7,7 +7,7 @@ import { DETECTION_TYPE, OLED_COLOR } from "./types";
 // ----------------------------
 
 // WARNING: Dashboard slows everything down quite a bit.
-export const showDashboard = true;
+export const showDashboard = false;
 
 // USE FACEAPI
 // export let detectionType = DETECTION_TYPE.FACEAPI;
@@ -40,8 +40,8 @@ export const savePhotoOnDetection = false;
 export const photoRatio = 480 / 640;
 // export const photoWidth = 640;
 // export const photoWidth = 480;
-// export const photoWidth = 320;
-export const photoWidth = 280;
+export const photoWidth = 320;
+// export const photoWidth = 280;
 // export const photoWidth = 240;
 
 export const cameraOptions = {
@@ -96,6 +96,14 @@ export const movementSpeed = 25;
 
 // Speed when casually looking around
 export const movementSpeedCasual = 60;
+
+// method to move to look at subject (LOOK, EASE)
+export const movementType = MOVE_TYPE.LOOK;
+
+// method to move to look around randomly (LOOK, EASE)
+export const movementTypeCasual = MOVE_TYPE.EASE;
+
+export const easeType = EASE_TYPE.inQuad;
 
 // Don't blink if moving more distance than this
 export const dontBlinkDistanceThreshold = 1;

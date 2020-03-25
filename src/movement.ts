@@ -3,7 +3,8 @@ import { IPoint } from "./interfaces";
 import { createTimer, toFixed, distanceBetweenPoints } from "./utils";
 import { log } from "./dashboard";
 
-import { FOVX, FOVY } from "./config";
+import { FOVX, FOVY, easeType } from "./config";
+import { MOVE_TYPE } from "./types";
 
 const servos: { [servoName: string]: Servo } = {};
 
@@ -64,6 +65,19 @@ const getDurationFromSpeed = (pos: IPoint, speed: number = 20) => {
   return duration;
 };
 
+export const toPos = (
+  pos: IPoint = { x: 90, y: 90 },
+  speed?: number,
+  type: MOVE_TYPE = MOVE_TYPE.LOOK
+) => {
+  switch (type) {
+    case MOVE_TYPE.LOOK:
+      return look(pos, speed);
+    case MOVE_TYPE.EASE:
+      return ease(pos, speed);
+  }
+};
+
 // Speed. Higher = slower
 export const look = (
   pos: IPoint = { x: 90, y: 90 },
@@ -86,7 +100,7 @@ const queueEaseAnimation = (
     animation.enqueue({
       duration,
       cuePoints: [0, 1],
-      keyFrames: [{ degrees: fromVal, easing: "inQuad" }, { degrees: toVal }],
+      keyFrames: [{ degrees: fromVal, easing: easeType }, { degrees: toVal }],
       // onstop: reject,
       onstop: resolve,
       oncomplete: resolve
@@ -117,33 +131,44 @@ export const getCurrent = () => ({
 });
 
 // Speed. Higher = slower
-export const lookRelativeDegrees = (
+export const toRelativeDegrees = (
   posCardinal: IPoint = { x: 0.5, y: 0.5 },
-  speed?: number
+  speed?: number,
+  type: MOVE_TYPE = MOVE_TYPE.LOOK
 ): Promise<any> => {
   const pos = cardinalToDegrees(posCardinal);
-  return look(pos, speed);
+  return toPos(pos, speed, type);
 };
 
-export const moveRelativeDegrees = (
-  posCardinal: IPoint = { x: 0.5, y: 0.5 },
-  duration: number = 10
-): Promise<any> => {
-  const pos = cardinalToDegrees(posCardinal);
-  return Promise.all([
-    move("base", pos.x, duration),
-    move("head", pos.y, duration)
-  ]);
-};
+// Deprecated. Use toRelativeDegrees
+// export const lookRelativeDegrees = (
+//   posCardinal: IPoint = { x: 0.5, y: 0.5 },
+//   speed?: number
+// ): Promise<any> => {
+//   const pos = cardinalToDegrees(posCardinal);
+//   return look(pos, speed);
+// };
 
-// Speed. Higher = slower
-export const easeRelativeDegrees = (
-  posCardinal: IPoint = { x: 0.5, y: 0.5 },
-  speed?: number
-): Promise<any> => {
-  const pos = cardinalToDegrees(posCardinal);
-  return ease(pos, speed);
-};
+// Deprecated. Use toRelativeDegrees
+// export const moveRelativeDegrees = (
+//   posCardinal: IPoint = { x: 0.5, y: 0.5 },
+//   duration: number = 10
+// ): Promise<any> => {
+//   const pos = cardinalToDegrees(posCardinal);
+//   return Promise.all([
+//     move("base", pos.x, duration),
+//     move("head", pos.y, duration)
+//   ]);
+// };
+
+// Deprecated. Use toRelativeDegrees
+// export const easeRelativeDegrees = (
+//   posCardinal: IPoint = { x: 0.5, y: 0.5 },
+//   speed?: number
+// ): Promise<any> => {
+//   const pos = cardinalToDegrees(posCardinal);
+//   return ease(pos, speed);
+// };
 
 export const getDistance = (
   posCardinal: IPoint = { x: 0.5, y: 0.5 }

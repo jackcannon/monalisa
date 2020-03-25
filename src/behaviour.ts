@@ -12,7 +12,9 @@ import {
   movementSpeedCasual,
   lookRandomlyAtSomethingDurationBase,
   lookRandomlyAtSomethingDurationRandom,
-  randomBlinking
+  randomBlinking,
+  movementType,
+  movementTypeCasual
 } from "./config";
 import { log } from "./dashboard";
 
@@ -141,7 +143,7 @@ const getLastLookedByDistances = (faces: IFacePoint[]): IFacePoint[] => {
 export const lookAt = (pick: IFacePoint) => {
   const distance = movement.getDistance(pick);
   movement
-    .easeRelativeDegrees(pick, movementSpeed)
+    .toRelativeDegrees(pick, movementSpeed, movementType)
     .then(() => eyesAfterLook(distance));
 };
 
@@ -152,7 +154,11 @@ export const lookAroundRandomly = (): Promise<IPoint> => {
     x: toFixed(Math.random(), 3),
     y: toFixed(Math.random(), 3)
   };
-  const move = movement.easeRelativeDegrees(direction, movementSpeedCasual);
+  const move = movement.toRelativeDegrees(
+    direction,
+    movementSpeedCasual,
+    movementTypeCasual
+  );
 
   move
     .then(() =>
