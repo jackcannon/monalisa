@@ -16,6 +16,11 @@ export enum OLED_COLOR {
   WHITE = 1
 }
 
+export enum MOVEMENT_TYPE {
+  FACE = "face",
+  RANDOM = "random"
+}
+
 export enum MOVE_TYPE {
   LOOK = "look",
   EASE = "ease"

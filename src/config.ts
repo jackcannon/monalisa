@@ -1,4 +1,10 @@
-import { DETECTION_TYPE, OLED_COLOR, MOVE_TYPE, EASE_TYPE } from "./types";
+import {
+  DETECTION_TYPE,
+  OLED_COLOR,
+  MOVE_TYPE,
+  EASE_TYPE,
+  MOVEMENT_TYPE
+} from "./types";
 
 // ----------------------------
 //
@@ -7,7 +13,7 @@ import { DETECTION_TYPE, OLED_COLOR, MOVE_TYPE, EASE_TYPE } from "./types";
 // ----------------------------
 
 // WARNING: Dashboard slows everything down quite a bit.
-export const showDashboard = false;
+export const showDashboard = true;
 
 // USE FACEAPI
 // export let detectionType = DETECTION_TYPE.FACEAPI;
@@ -92,18 +98,21 @@ export let oledForeColor = OLED_COLOR.BLACK;
 // ----------------------------
 
 // Speed. Higher = slower
-export const movementSpeed = 25;
-
-// Speed when casually looking around
-export const movementSpeedCasual = 60;
+export const moveSpeed = {
+  [MOVEMENT_TYPE.FACE]: 25,
+  [MOVEMENT_TYPE.RANDOM]: 60
+};
 
 // method to move to look at subject (LOOK, EASE)
-export const movementType = MOVE_TYPE.LOOK;
+export const moveType = {
+  [MOVEMENT_TYPE.FACE]: MOVE_TYPE.EASE,
+  [MOVEMENT_TYPE.RANDOM]: MOVE_TYPE.EASE
+};
 
-// method to move to look around randomly (LOOK, EASE)
-export const movementTypeCasual = MOVE_TYPE.EASE;
-
-export const easeType = EASE_TYPE.inQuad;
+export const easeType = {
+  [MOVEMENT_TYPE.FACE]: EASE_TYPE.inQuad,
+  [MOVEMENT_TYPE.RANDOM]: EASE_TYPE.inOutQuad
+};
 
 // Don't blink if moving more distance than this
 export const dontBlinkDistanceThreshold = 1;

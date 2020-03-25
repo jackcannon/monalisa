@@ -1,12 +1,20 @@
 import { Servo, Servos, Animation } from "johnny-five";
 import { IPoint } from "./interfaces";
-import { createTimer, toFixed, distanceBetweenPoints } from "./utils";
+import {
+  createTimer,
+  toFixed,
+  distanceBetweenPoints,
+  getPromise
+} from "./utils";
 import { log } from "./dashboard";
 
-import { FOVX, FOVY, easeType } from "./config";
-import { MOVE_TYPE } from "./types";
+import { FOVX, FOVY, easeType, moveSpeed, moveType } from "./config";
+import { MOVE_TYPE, MOVEMENT_TYPE } from "./types";
+import { Subject } from "rxjs";
 
 const servos: { [servoName: string]: Servo } = {};
+
+const moveCompleteSubject: { [servoName: string]: Subject<void> } = {};
 
 let animationX: Animation;
 let animationY: Animation;
@@ -29,6 +37,7 @@ export const setup = () => {
     center: true,
     startAt: startingPosX
   });
+  setupMoveCompleteSubject(servos.base, "base");
 
   servos.head = new Servo({
     controller: "PCA9685",
@@ -36,9 +45,17 @@ export const setup = () => {
     range: [0, 125],
     startAt: startingPosY
   });
+  setupMoveCompleteSubject(servos.base, "head");
 
   animationX = new Animation(servos.base);
   animationY = new Animation(servos.head);
+};
+
+const setupMoveCompleteSubject = (servo, servoName) => {
+  moveCompleteSubject[servoName] = new Subject<void>();
+  servo.on("move:complete", () => {
+    moveCompleteSubject[servoName].next();
+  });
 };
 
 export const reset = () => {
@@ -46,15 +63,14 @@ export const reset = () => {
   servos.head.to(startingPosY);
 };
 
-export const move = (servoName, position, time = 1000) => {
+export const move = async (servoName, position, time = 1000) => {
   let servo = servos[servoName];
   if (!servo && typeof servoName !== "string" && servoName instanceof Servo) {
     servo = servoName;
   }
-  return new Promise((resolve, reject) => {
-    servo.once("move:complete", resolve);
-    servo.to(position, time);
-  });
+  const moveComplete = getPromise(moveCompleteSubject[servoName]);
+  servo.to(position, time);
+  return await moveComplete;
 };
 
 const getDurationFromSpeed = (pos: IPoint, speed: number = 20) => {
@@ -67,14 +83,15 @@ const getDurationFromSpeed = (pos: IPoint, speed: number = 20) => {
 
 export const toPos = (
   pos: IPoint = { x: 90, y: 90 },
-  speed?: number,
-  type: MOVE_TYPE = MOVE_TYPE.LOOK
+  movementType: MOVEMENT_TYPE
 ) => {
+  const type = moveType[movementType];
+  const speed = moveSpeed[movementType];
   switch (type) {
     case MOVE_TYPE.LOOK:
       return look(pos, speed);
     case MOVE_TYPE.EASE:
-      return ease(pos, speed);
+      return ease(pos, speed, movementType);
   }
 };
 
@@ -94,13 +111,18 @@ const queueEaseAnimation = (
   animation: Animation,
   fromVal: number,
   toVal: number,
-  duration: number
+  duration: number,
+  movementType: MOVEMENT_TYPE
 ): Promise<any> =>
   new Promise((resolve, reject) => {
+    log.log("easing func", easeType[movementType]);
     animation.enqueue({
       duration,
       cuePoints: [0, 1],
-      keyFrames: [{ degrees: fromVal, easing: easeType }, { degrees: toVal }],
+      keyFrames: [
+        { degrees: fromVal, easing: easeType[movementType] },
+        { degrees: toVal }
+      ],
       // onstop: reject,
       onstop: resolve,
       oncomplete: resolve
@@ -110,7 +132,8 @@ const queueEaseAnimation = (
 // Speed. Higher = slower
 export const ease = (
   pos: IPoint = { x: 90, y: 90 },
-  speed: number = 20
+  speed: number = 20,
+  movementType: MOVEMENT_TYPE
 ): Promise<any> => {
   current = current.then(() => {
     // animationX.stop();
@@ -118,8 +141,20 @@ export const ease = (
     const currentPos = getCurrent();
     const duration = getDurationFromSpeed(pos, speed);
     return Promise.all([
-      queueEaseAnimation(animationX, currentPos.x, pos.x, duration),
-      queueEaseAnimation(animationY, currentPos.y, pos.y, duration)
+      queueEaseAnimation(
+        animationX,
+        currentPos.x,
+        pos.x,
+        duration,
+        movementType
+      ),
+      queueEaseAnimation(
+        animationY,
+        currentPos.y,
+        pos.y,
+        duration,
+        movementType
+      )
     ]);
   });
   return current;
@@ -133,11 +168,10 @@ export const getCurrent = () => ({
 // Speed. Higher = slower
 export const toRelativeDegrees = (
   posCardinal: IPoint = { x: 0.5, y: 0.5 },
-  speed?: number,
-  type: MOVE_TYPE = MOVE_TYPE.LOOK
+  movementType: MOVEMENT_TYPE
 ): Promise<any> => {
   const pos = cardinalToDegrees(posCardinal);
-  return toPos(pos, speed, type);
+  return toPos(pos, movementType);
 };
 
 // Deprecated. Use toRelativeDegrees

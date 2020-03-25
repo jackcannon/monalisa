@@ -2,20 +2,21 @@ import { formatTime, formatAsciiNumbers } from "./utils";
 import {
   savePhotoOnDetection,
   photoWidth,
-  movementSpeed,
-  movementSpeedCasual,
+  moveSpeed,
   dontBlinkDistanceThreshold,
   durationLookingAtEachFace,
   durationBeforeForgettingFace,
   randomBlinking,
   lookRandomlyAtSomethingDurationBase,
-  lookRandomlyAtSomethingDurationRandom
+  lookRandomlyAtSomethingDurationRandom,
+  moveType
 } from "./config";
 import {
   IDashboardSetup,
   IDashboardLog,
   IDashboardRecord
 } from "./dashboardTypes";
+import { MOVEMENT_TYPE } from "./types";
 
 const blessed = require("blessed");
 const contrib = require("blessed-contrib");
@@ -25,8 +26,10 @@ const dataLength = -100;
 const configArr = [
   ["savePhotoOnDetection", savePhotoOnDetection],
   ["photoWidth", photoWidth],
-  ["movementSpeed", movementSpeed],
-  ["movementSpeedCasual", movementSpeedCasual],
+  ["moveSpeed - FACE", moveSpeed[MOVEMENT_TYPE.FACE]],
+  ["moveSpeed - RANDOM", moveSpeed[MOVEMENT_TYPE.RANDOM]],
+  ["moveType - FACE", moveType[MOVEMENT_TYPE.FACE]],
+  ["moveType - RANDOM", moveType[MOVEMENT_TYPE.RANDOM]],
   ["dontBlinkDistanceThreshold", dontBlinkDistanceThreshold],
   ["durationLookingAtEachFace", durationLookingAtEachFace],
   ["durationBeforeForgettingFace", durationBeforeForgettingFace],

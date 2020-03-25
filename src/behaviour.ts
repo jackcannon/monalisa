@@ -5,18 +5,15 @@ import { BehaviorSubject } from "rxjs";
 import { first, filter } from "rxjs/operators";
 import { distanceBetweenPoints, delay, toFixed, randomID } from "./utils";
 import {
-  movementSpeed,
   dontBlinkDistanceThreshold,
   durationLookingAtEachFace,
   durationBeforeForgettingFace,
-  movementSpeedCasual,
   lookRandomlyAtSomethingDurationBase,
   lookRandomlyAtSomethingDurationRandom,
-  randomBlinking,
-  movementType,
-  movementTypeCasual
+  randomBlinking
 } from "./config";
 import { log } from "./dashboard";
+import { MOVEMENT_TYPE } from "./types";
 
 enum EYE_TYPE {
   LOOKING_AT_FACE = "lookingAtFace",
@@ -143,7 +140,7 @@ const getLastLookedByDistances = (faces: IFacePoint[]): IFacePoint[] => {
 export const lookAt = (pick: IFacePoint) => {
   const distance = movement.getDistance(pick);
   movement
-    .toRelativeDegrees(pick, movementSpeed, movementType)
+    .toRelativeDegrees(pick, MOVEMENT_TYPE.FACE)
     .then(() => eyesAfterLook(distance));
 };
 
@@ -154,11 +151,7 @@ export const lookAroundRandomly = (): Promise<IPoint> => {
     x: toFixed(Math.random(), 3),
     y: toFixed(Math.random(), 3)
   };
-  const move = movement.toRelativeDegrees(
-    direction,
-    movementSpeedCasual,
-    movementTypeCasual
-  );
+  const move = movement.toRelativeDegrees(direction, MOVEMENT_TYPE.RANDOM);
 
   move
     .then(() =>
