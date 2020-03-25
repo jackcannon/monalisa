@@ -7,6 +7,7 @@
     "src/worker-opencv.ts",
     "src/worker-pico.ts",
     "src/worker-eyes.ts",
+    "src/detection-faceapi.ts",
     "src/face-api/**/*.ts",
     "src/face-api/**/*.json"
   ],

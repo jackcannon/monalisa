@@ -5,10 +5,15 @@ import { createTimer, toFixed } from "./utils";
 import { IFacePoint } from "./interfaces";
 import { log, addRecord } from "./dashboard";
 import { useWorker, detectionType } from "./config";
-import { DETECTION_TYPE } from "./type";
+import { DETECTION_TYPE } from "./types";
 
 import { startDetection as startOpencv } from "./detection-opencv";
-// import { startDetection as startFaceapi } from "./detection-faceapi-local";
+
+let startFaceapi = () => {};
+if (detectionType === DETECTION_TYPE.FACEAPI && !useWorker) {
+  // import { startDetection as startFaceapi } from "./detection-faceapi";
+  startFaceapi = require("./detection-faceapi.js").startDetection;
+}
 import { startDetection as startWorker } from "./detection-worker";
 
 let pointsSubject: BehaviorSubject<IFacePoint[]> = null;
@@ -18,8 +23,8 @@ const getDetectionStart = (): Function => {
     return () => startWorker(detectionType);
   } else {
     return {
-      [DETECTION_TYPE.OPENCV]: startOpencv
-      // [DETECTION_TYPE.FACEAPI]: startFaceapi
+      [DETECTION_TYPE.OPENCV]: startOpencv,
+      [DETECTION_TYPE.FACEAPI]: startFaceapi
     }[detectionType];
   }
 };

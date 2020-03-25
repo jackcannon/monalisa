@@ -3,11 +3,11 @@ import { BehaviorSubject } from "rxjs";
 
 import { IFacePoint } from "./interfaces";
 import { toFixed, getPromise } from "./utils";
-import { cameraOptions, savePhotoOnDetection } from "./config";
+import { cameraOptions, savePhotoOnDetection, opencvConfig } from "./config";
 import { getFrames } from "./cameraHelper";
 import { log } from "./dashboard";
 
-const dataPath = "./src/opencv/haarcascade_frontalface_alt.xml";
+const dataPath = `./src/opencv/${opencvConfig.dataName}.xml`;
 
 let pointsSubject: BehaviorSubject<IFacePoint[]> = new BehaviorSubject<
   IFacePoint[]

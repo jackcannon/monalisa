@@ -4,11 +4,11 @@ import { BehaviorSubject } from "rxjs";
 
 import { IFacePoint } from "./interfaces";
 import { toFixed } from "./utils";
-import { cameraOptions, savePhotoOnDetection } from "./config";
+import { cameraOptions, savePhotoOnDetection, opencvConfig } from "./config";
 import { getFrames } from "./cameraHelper";
 import { log } from "./dashboard";
 
-const dataPath = "./src/opencv/haarcascade_frontalface_alt.xml";
+const dataPath = `./src/opencv/${opencvConfig.dataName}.xml`;
 
 let framesSubject: BehaviorSubject<Buffer> = null;
 let detectCount: number = 0;

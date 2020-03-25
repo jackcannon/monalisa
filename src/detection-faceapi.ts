@@ -18,12 +18,7 @@ import { first } from "rxjs/operators";
 
 import { IFacePoint } from "./interfaces";
 import { toFixed, getPromise } from "./utils";
-import {
-  cameraOptions,
-  savePhotoOnDetection,
-  detectSingleFace,
-  faceDetectMinFaceSize as minFaceSize
-} from "./config";
+import { cameraOptions, savePhotoOnDetection, faceApiConfig } from "./config";
 import { getFrames } from "./cameraHelper";
 
 let pointsSubject: BehaviorSubject<IFacePoint[]> = new BehaviorSubject<
@@ -38,7 +33,7 @@ let queue;
 const setup = async () => {
   await faceDetectionNet.loadFromDisk("./src/face-api/weights");
   faceDetectionOptions = getFaceDetectorOptions(faceDetectionNet, {
-    minFaceSize,
+    minFaceSize: faceApiConfig.minFaceSize,
     scaleFactor: 0.8
   });
 };
@@ -73,7 +68,7 @@ export const startProcessing = async () => {
 };
 
 const detect = async (imgBuffer): Promise<IFacePoint[]> => {
-  if (detectSingleFace) {
+  if (faceApiConfig.singleFace) {
     return await detectSingle(imgBuffer);
   } else {
     return await detectMulti(imgBuffer);

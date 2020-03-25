@@ -1,8 +1,8 @@
 import * as faceapi from "face-api.js";
 
-export const faceDetectionNet = faceapi.nets.ssdMobilenetv1;
+// export const faceDetectionNet = faceapi.nets.ssdMobilenetv1;
 // export const faceDetectionNet = faceapi.nets.tinyFaceDetector
-// export const faceDetectionNet = faceapi.nets.mtcnn;
+export const faceDetectionNet = faceapi.nets.mtcnn;
 
 // SsdMobilenetv1Options
 const minConfidence = 0.5;

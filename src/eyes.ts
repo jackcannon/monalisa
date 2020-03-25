@@ -3,6 +3,8 @@ import { IEyeConfig } from "./interfaces";
 import { Worker } from "worker_threads";
 import { BehaviorSubject } from "rxjs";
 import { first } from "rxjs/operators";
+import { oledForeColor } from "./config";
+import { OLED_COLOR } from "./types";
 const OLED = require("oled-js");
 
 let oled;
@@ -42,6 +44,10 @@ export const setup = async board => {
 
   oled = new OLED(board, five, opts);
   oled.turnOnDisplay();
+
+  if (oledForeColor === OLED_COLOR.BLACK) {
+    oled.invertDisplay(true);
+  }
 
   await createWorker();
   worker.on("message", onMsg);

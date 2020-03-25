@@ -1,5 +1,8 @@
 import { parentPort } from "worker_threads";
 import { IEyeConfig } from "./interfaces";
+import { OLED_LAYER } from "./types";
+
+// type OLED_LAYER = string;
 
 parentPort.on("message", msg => {
   switch (msg.type) {
@@ -30,7 +33,7 @@ export const reset = () => {
   updateChangedPixels();
 };
 
-const getLinePixels = (x0, y0, x1, y1, color) => {
+const getLinePixels = (x0, y0, x1, y1, color: OLED_LAYER) => {
   const dx = Math.abs(x1 - x0);
   const sx = x0 < x1 ? 1 : -1;
   const dy = Math.abs(y1 - y0);
@@ -60,7 +63,7 @@ const getLinePixels = (x0, y0, x1, y1, color) => {
   return output;
 };
 
-const getRectPixels = (x, y, w, h, color) => {
+const getRectPixels = (x, y, w, h, color: OLED_LAYER) => {
   let pixels = [];
   pixels = pixels.concat(getLinePixels(x, y, x + w, y, color));
   pixels = pixels.concat(getLinePixels(x, y + 1, x, y + h - 1, color));
@@ -69,7 +72,7 @@ const getRectPixels = (x, y, w, h, color) => {
   return pixels;
 };
 
-const getCirclePixels = (x0, y0, r, color) => {
+const getCirclePixels = (x0, y0, r, color: OLED_LAYER) => {
   let f = 1 - r;
   let ddF_x = 1;
   let ddF_y = -2 * r;
@@ -109,7 +112,14 @@ const getCirclePixels = (x0, y0, r, color) => {
   return output;
 };
 
-const getEllipsePixels = (x0, y0, width, height, color, progression = 6) => {
+const getEllipsePixels = (
+  x0,
+  y0,
+  width,
+  height,
+  color: OLED_LAYER,
+  progression = 6
+) => {
   const pixels = [];
   let xlast = -1;
   let ylast = -1;
@@ -132,19 +142,19 @@ const getEllipsePixels = (x0, y0, width, height, color, progression = 6) => {
   return pixels;
 };
 
-const drawLine = (x0, y0, x1, y1, color) => {
+const drawLine = (x0, y0, x1, y1, color: OLED_LAYER) => {
   addPixels(getLinePixels(x0, y0, x1, y1, color));
 };
 
-const drawCircle = (x0, y0, r, color) => {
+const drawCircle = (x0, y0, r, color: OLED_LAYER) => {
   addPixels(getCirclePixels(x0, y0, r, color));
 };
 
-const drawEllipse = (x0, y0, width, height, color, progression) => {
+const drawEllipse = (x0, y0, width, height, color: OLED_LAYER, progression) => {
   addPixels(getEllipsePixels(x0, y0, width, height, color, progression));
 };
 
-const fill = (outline, color) => {
+const fill = (outline, color: OLED_LAYER) => {
   const lines = getHorizonalLinesOfCircle(outline);
   const pixels = outline.concat(
     lines
@@ -169,7 +179,7 @@ const fillShading = (
         line[0][1],
         line[1][0],
         line[1][1],
-        0
+        OLED_LAYER.BACK
       );
       row.forEach(pixel => {
         const combined = inverseDirection
@@ -183,13 +193,13 @@ const fillShading = (
   addPixels(pixels);
 };
 
-const fillCircle = (x0, y0, r, color) => {
+const fillCircle = (x0, y0, r, color: OLED_LAYER) => {
   fill(getCirclePixels(x0, y0, r, color), color);
 };
-const fillEllipse = (x0, y0, width, height, color, progression) => {
+const fillEllipse = (x0, y0, width, height, color: OLED_LAYER, progression) => {
   fill(getEllipsePixels(x0, y0, width, height, color, progression), color);
 };
-const fillRect = (x, y, w, h, color) => {
+const fillRect = (x, y, w, h, color: OLED_LAYER) => {
   fill(getRectPixels(x, y, w, h, color), color);
 };
 
@@ -240,7 +250,14 @@ const drawEyes = (eyes: IEyeConfig[], waiting: boolean = false) => {
 
   eyes.forEach((eye: IEyeConfig, eyeIndex: number) => {
     const eyePos = eyePositions[eyeIndex];
-    const outer = getEllipsePixels(eyePos.x, eyePos.y, width, height, 1, 4);
+    const outer = getEllipsePixels(
+      eyePos.x,
+      eyePos.y,
+      width,
+      height,
+      OLED_LAYER.FORE,
+      4
+    );
     const horLines = getHorizonalLinesOfCircle(outer);
 
     // outer line
@@ -259,32 +276,68 @@ const drawEyes = (eyes: IEyeConfig[], waiting: boolean = false) => {
       const bottomY = Math.ceil(pupilPosY + waitHeight / 2);
 
       // Top
-      drawLine(leftX, topY, rightX, topY, 1);
+      drawLine(leftX, topY, rightX, topY, OLED_LAYER.FORE);
 
       const topWaitOutline = [
-        ...getLinePixels(leftX, topY, leftX, topY + 2, 1),
-        ...getLinePixels(rightX, topY, rightX, topY + 2, 1),
-        ...getLinePixels(leftX, topY + 2, pupilPosX, pupilPosY, 1),
-        ...getLinePixels(rightX, topY + 2, pupilPosX, pupilPosY, 1)
+        ...getLinePixels(leftX, topY, leftX, topY + 2, OLED_LAYER.FORE),
+        ...getLinePixels(rightX, topY, rightX, topY + 2, OLED_LAYER.FORE),
+        ...getLinePixels(
+          leftX,
+          topY + 2,
+          pupilPosX,
+          pupilPosY,
+          OLED_LAYER.FORE
+        ),
+        ...getLinePixels(
+          rightX,
+          topY + 2,
+          pupilPosX,
+          pupilPosY,
+          OLED_LAYER.FORE
+        )
       ];
       addPixels(topWaitOutline);
       fillShading(getHorizonalLinesOfCircle(topWaitOutline), 2, !eyeIndex);
-      drawLine(leftX + 1, topY + 1, rightX - 1, topY + 1, 0);
-      drawLine(leftX + 1, topY + 2, rightX - 1, topY + 2, 0);
+      drawLine(leftX + 1, topY + 1, rightX - 1, topY + 1, OLED_LAYER.BACK);
+      drawLine(leftX + 1, topY + 2, rightX - 1, topY + 2, OLED_LAYER.BACK);
 
       // Bottom
-      drawLine(leftX, bottomY, rightX, bottomY, 1);
+      drawLine(leftX, bottomY, rightX, bottomY, OLED_LAYER.FORE);
 
       const bottomWaitOutline = [
-        ...getLinePixels(leftX, bottomY, leftX, bottomY - 2, 1),
-        ...getLinePixels(rightX, bottomY, rightX, bottomY - 2, 1),
-        ...getLinePixels(leftX, bottomY - 2, pupilPosX, pupilPosY, 1),
-        ...getLinePixels(rightX, bottomY - 2, pupilPosX, pupilPosY, 1)
+        ...getLinePixels(leftX, bottomY, leftX, bottomY - 2, OLED_LAYER.FORE),
+        ...getLinePixels(rightX, bottomY, rightX, bottomY - 2, OLED_LAYER.FORE),
+        ...getLinePixels(
+          leftX,
+          bottomY - 2,
+          pupilPosX,
+          pupilPosY,
+          OLED_LAYER.FORE
+        ),
+        ...getLinePixels(
+          rightX,
+          bottomY - 2,
+          pupilPosX,
+          pupilPosY,
+          OLED_LAYER.FORE
+        )
       ];
       addPixels(bottomWaitOutline);
       const bottomShading = [
-        ...getLinePixels(leftX + 1, bottomY, leftX + 1, bottomY - 3, 1),
-        ...getLinePixels(rightX - 1, bottomY, rightX - 1, bottomY - 3, 1)
+        ...getLinePixels(
+          leftX + 1,
+          bottomY,
+          leftX + 1,
+          bottomY - 3,
+          OLED_LAYER.FORE
+        ),
+        ...getLinePixels(
+          rightX - 1,
+          bottomY,
+          rightX - 1,
+          bottomY - 3,
+          OLED_LAYER.FORE
+        )
       ];
       fillShading(getHorizonalLinesOfCircle(bottomShading), 2, !eyeIndex, 1);
     } else {
@@ -298,7 +351,7 @@ const drawEyes = (eyes: IEyeConfig[], waiting: boolean = false) => {
         pupilPosX,
         pupilPosY,
         Math.round(width * 0.25),
-        1
+        OLED_LAYER.FORE
       );
       const pupilPixels = getHorizonalLinesOfCircle(pupilBorder);
       fillShading(pupilPixels, 5, !eyeIndex);
@@ -326,12 +379,12 @@ const drawEyes = (eyes: IEyeConfig[], waiting: boolean = false) => {
         eyePos.y + height * 1.75,
         width * 1.2,
         height,
-        1,
+        OLED_LAYER.FORE,
         4
       );
       addPixels(cheekOutline);
       fill(cheekOutline, 0);
-      fillRect(64 * eyeIndex, 64 - 5, 64, 64, 0);
+      fillRect(64 * eyeIndex, 64 - 5, 64, 64, OLED_LAYER.BACK);
     }
 
     // brow
@@ -341,17 +394,17 @@ const drawEyes = (eyes: IEyeConfig[], waiting: boolean = false) => {
         eyePos.y - height * 1.7,
         width * 1.35,
         height,
-        1,
+        OLED_LAYER.FORE,
         4
       );
       addPixels(browOutline);
-      fill(browOutline, 0);
-      fillRect(64 * eyeIndex, 0, 64, 6, 0);
+      fill(browOutline, OLED_LAYER.BACK);
+      fillRect(64 * eyeIndex, 0, 64, 6, OLED_LAYER.BACK);
     }
   });
 };
 const clearDisplay = () => {
-  fillRect(0, 0, 128, 64, 0);
+  fillRect(0, 0, 128, 64, OLED_LAYER.BACK);
 };
 
 // Eye config tools

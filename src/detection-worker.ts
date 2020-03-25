@@ -5,7 +5,7 @@ import { filter } from "rxjs/operators";
 import { IFacePoint } from "./interfaces";
 import { getFrames } from "./cameraHelper";
 import { getPromise } from "./utils";
-import { DETECTION_TYPE, IWorkerDetect } from "./type";
+import { DETECTION_TYPE, IWorkerDetect } from "./types";
 
 const workerPaths = {
   [DETECTION_TYPE.OPENCV]: "./dist/worker-opencv.js",
@@ -24,7 +24,7 @@ export const startDetection = async (
   workerType: DETECTION_TYPE
 ): Promise<BehaviorSubject<IFacePoint[]>> => {
   framesSubject = await getFrames();
-  createWorker(workerType);
+  await createWorker(workerType);
   startProcessing();
   runProcess();
   await getPromise(pointsSubject);
@@ -55,7 +55,7 @@ const startProcessing = () => {
   workerMsgs
     .pipe(filter(msg => msg && msg.type === "points"))
     .subscribe(({ points }) => {
-      pointsSubject.next(points);
       runProcess();
+      pointsSubject.next(points);
     });
 };

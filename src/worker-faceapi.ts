@@ -8,13 +8,8 @@ import {
 import { IFacePoint } from "./interfaces";
 import { toFixed } from "./utils";
 import { parentPort, isMainThread, threadId } from "worker_threads";
-import {
-  cameraOptions,
-  savePhotoOnDetection,
-  detectSingleFace,
-  faceDetectMinFaceSize as minFaceSize
-} from "./config";
-import { IWorkerInit, IWorkerDetect, IWorkerPoints } from "./type";
+import { cameraOptions, savePhotoOnDetection, faceApiConfig } from "./config";
+import { IWorkerInit, IWorkerDetect, IWorkerPoints } from "./types";
 
 let faceDetectionOptions;
 
@@ -29,7 +24,7 @@ parentPort.on("message", msg => {
 const setup = async () => {
   await faceDetectionNet.loadFromDisk("./src/face-api/weights");
   faceDetectionOptions = getFaceDetectorOptions(faceDetectionNet, {
-    minFaceSize,
+    minFaceSize: faceApiConfig.minFaceSize,
     scaleFactor: 0.8
   });
   parentPort.postMessage({ type: "init" } as IWorkerInit);
@@ -45,7 +40,7 @@ const handleDetectMsg = async (msg: IWorkerDetect) => {
 };
 
 const detect = async (imgBuffer): Promise<IFacePoint[]> => {
-  if (detectSingleFace) {
+  if (faceApiConfig.singleFace) {
     return await detectSingle(imgBuffer);
   } else {
     return await detectMulti(imgBuffer);

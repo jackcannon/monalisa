@@ -6,6 +6,16 @@ export enum DETECTION_TYPE {
   PICO = "pico"
 }
 
+export enum OLED_LAYER {
+  BACK = 0,
+  FORE = 1
+}
+
+export enum OLED_COLOR {
+  BLACK = 0,
+  WHITE = 1
+}
+
 // Worker messages
 export interface IWorkerMessage {
   type: string;

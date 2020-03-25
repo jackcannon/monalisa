@@ -1,8 +1,6 @@
 import { formatTime, formatAsciiNumbers } from "./utils";
 import {
-  detectSingleFace,
   savePhotoOnDetection,
-  faceDetectMinFaceSize,
   photoWidth,
   movementSpeed,
   movementSpeedCasual,
@@ -25,9 +23,7 @@ const contrib = require("blessed-contrib");
 const dataLength = -100;
 
 const configArr = [
-  ["detectSingleFace", detectSingleFace],
   ["savePhotoOnDetection", savePhotoOnDetection],
-  ["faceDetectMinFaceSize", faceDetectMinFaceSize],
   ["photoWidth", photoWidth],
   ["movementSpeed", movementSpeed],
   ["movementSpeedCasual", movementSpeedCasual],
