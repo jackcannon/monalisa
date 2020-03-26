@@ -1,4 +1,4 @@
-import { IFacePoint, ILookedAt, IPoint } from "./interfaces";
+import { IFacePoint, ILookedAt, IPoint, MOVEMENT_TYPE } from "./interfaces";
 import * as movement from "./movement";
 import * as eyes from "./eyes";
 import { BehaviorSubject } from "rxjs";
@@ -13,7 +13,6 @@ import {
   randomBlinking
 } from "./config";
 import { log } from "./dashboard";
-import { MOVEMENT_TYPE } from "./types";
 
 enum EYE_TYPE {
   LOOKING_AT_FACE = "lookingAtFace",

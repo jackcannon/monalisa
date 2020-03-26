@@ -5,11 +5,15 @@ import {
   getFaceDetectorOptions,
   saveFile
 } from "./face-api/examples-nodejs/commons";
-import { IFacePoint } from "./interfaces";
+import {
+  IFacePoint,
+  IWorkerInit,
+  IWorkerDetect,
+  IWorkerPoints
+} from "./interfaces";
 import { toFixed } from "./utils";
 import { parentPort, isMainThread, threadId } from "worker_threads";
 import { cameraOptions, savePhotoOnDetection, faceApiConfig } from "./config";
-import { IWorkerInit, IWorkerDetect, IWorkerPoints } from "./types";
 
 let faceDetectionOptions;
 

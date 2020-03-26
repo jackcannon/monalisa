@@ -15,9 +15,17 @@ const handleIncomingMessage = (msg: IChildProcessMessage) => {};
 
 // ADMIN
 
-export const shutdown = () => {
+export const onChildKilled = () =>
+  new Promise(resolve => {
+    childProcess.once("exit", resolve);
+    childProcess.once("close", resolve);
+  });
+
+export const shutdown = async () => {
   if (childProcess) {
+    // const killProm = onChildKilled();
     childProcess.kill(0);
+    // await killProm;
   }
 };
 

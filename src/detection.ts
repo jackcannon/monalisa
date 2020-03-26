@@ -2,10 +2,9 @@ import { BehaviorSubject } from "rxjs";
 import { filter } from "rxjs/operators";
 
 import { createTimer, toFixed } from "./utils";
-import { IFacePoint } from "./interfaces";
+import { IFacePoint, DETECTION_TYPE } from "./interfaces";
 import { log, addRecord } from "./dashboard";
 import { useWorker, detectionType } from "./config";
-import { DETECTION_TYPE } from "./types";
 
 import { startDetection as startOpencv } from "./detection-opencv";
 

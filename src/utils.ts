@@ -62,3 +62,23 @@ export const formatAsciiNumbers = (str: string): string[] => {
       .join("  ")
   );
 };
+
+// Used to generate symbol lists for faceMapBox display
+export const getSymbolsFromAscii = (ascii: string[], empty = " ") => {
+  let centre = { x: 0, y: 0 };
+  let symbols = [];
+  ascii.forEach((row, y) =>
+    row.split("").forEach((char, x) => {
+      if (char === "X") {
+        centre = { x, y };
+      } else if (char !== empty) {
+        symbols.push({ x, y, char });
+      }
+    })
+  );
+  return symbols.map(({ x, y, char }) => ({
+    x: x - centre.x,
+    y: y - centre.y,
+    char
+  }));
+};

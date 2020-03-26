@@ -4,7 +4,7 @@ import {
   MOVE_TYPE,
   EASE_TYPE,
   MOVEMENT_TYPE
-} from "./types";
+} from "./interfaces";
 
 // ----------------------------
 //

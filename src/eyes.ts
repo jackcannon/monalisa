@@ -1,10 +1,9 @@
 import * as five from "johnny-five";
-import { IEyeConfig } from "./interfaces";
+import { IEyeConfig, OLED_COLOR } from "./interfaces";
 import { Worker } from "worker_threads";
 import { BehaviorSubject } from "rxjs";
 import { first } from "rxjs/operators";
 import { oledForeColor } from "./config";
-import { OLED_COLOR } from "./types";
 const OLED = require("oled-js");
 
 let oled;

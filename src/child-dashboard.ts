@@ -1,4 +1,4 @@
-import { formatTime, formatAsciiNumbers } from "./utils";
+import { formatTime, formatAsciiNumbers, getSymbolsFromAscii } from "./utils";
 import {
   savePhotoOnDetection,
   photoWidth,
@@ -16,7 +16,7 @@ import {
   IDashboardLog,
   IDashboardRecord
 } from "./dashboardTypes";
-import { MOVEMENT_TYPE } from "./types";
+import { MOVEMENT_TYPE } from "./interfaces";
 
 const blessed = require("blessed");
 const contrib = require("blessed-contrib");
@@ -85,6 +85,8 @@ const log = (msg: IDashboardLog) =>
       .join(" ")
   );
 
+const debug = (...data) => log({ type: "log", data });
+
 const detectionLine = grid.set(0, 7, 9, 5, contrib.line, {
   style: {
     line: "yellow",
@@ -97,6 +99,7 @@ const detectionLine = grid.set(0, 7, 9, 5, contrib.line, {
   xLabelPadding: 3,
   xPadding: 5,
   showLegend: false,
+  numYLabels: 100,
   wholeNumbersOnly: true, //true=do not show fraction in y axis
   label: "Camera Detection Times"
 });
@@ -112,6 +115,7 @@ const faceNumLine = grid.set(9, 7, 3, 5, contrib.line, {
   xLabelPadding: 6,
   xPadding: 5,
   showLegend: false,
+  numYLabels: 5,
   wholeNumbersOnly: true, //true=do not show fraction in y axis
   label: "Faces Seen"
 });
@@ -158,8 +162,9 @@ const configBox1 = grid.set(9, 0, 3, 3, blessed.box, {
   }
 });
 
-const configBox2 = grid.set(9, 3, 3, 3, blessed.box, {
-  label: "---",
+const faceMapBox = grid.set(9, 3, 3, 3, blessed.box, {
+  label: "Face Map",
+  tags: true,
   content: "",
   style: {
     border: {
@@ -205,14 +210,70 @@ Score: ${points.score}
   str += "{/}";
   return str;
 };
-const updateFaceBoxes = (points, count) => {
+const updateFaceBoxes = (records, count) => {
   faces.forEach((face, i) => {
-    const content = formatFaceContent(points[i]);
+    const content = formatFaceContent(records[i]);
     face.setContent(content);
     face.style.border = {
-      fg: points[i] ? "green" : "black"
+      fg: records[i] ? "green" : "black"
     };
   });
+};
+const updateFaceMapBox = (records, count) => {
+  const width = faceMapBox.width - 2;
+  const height = faceMapBox.height - 2;
+  const empty = " ";
+
+  const faceColours = [
+    "blue",
+    "red",
+    "yellow",
+    "green",
+    "magenta",
+    "cyan",
+    "white",
+
+    "red",
+    "red",
+    "red",
+    "red",
+    "red",
+    "red"
+  ];
+  const space = new Array(height)
+    .fill(1)
+    .map(() => new Array(width).fill(empty));
+
+  const ascii = ["  ___  ", " /   \\ ", "|  X  |", " \\   / ", "  ‾‾‾  "];
+  //  ___
+  // /   \
+  //|  X  |
+  // \   /
+  //  ‾‾‾
+
+  const markers = getSymbolsFromAscii(ascii);
+
+  const limit = (val, max) => Math.max(0, Math.min(val, max - 1));
+  records.map((face, i) => {
+    const x = limit(width - Math.ceil(width * face.x), width);
+    const y = limit(Math.floor(height * face.y), height);
+    const faceCol = faceColours[i];
+    const displayString = `{white-fg}{${faceCol}-bg}${i +
+      1}{/${faceCol}-bg}{/white-fg}`;
+    space[y].splice(x, 1, displayString);
+
+    markers
+      .filter(
+        ({ x: mX, y: mY }) =>
+          space[y + mY] &&
+          space[y + mY][x + mX] &&
+          space[y + mY][x + mX] === empty
+      )
+      .forEach(({ x: mX, y: mY, char }) =>
+        space[y + mY].splice(x + mX, 1, char)
+      );
+  });
+  faceMapBox.setContent(space.map(col => col.join("")).join(""));
 };
 
 // DATA
@@ -240,6 +301,7 @@ const addRecord = ({ points, delta }: IDashboardRecord) => {
   );
   faceNumLine.setData(formatFaceNumData(faceRecords, totalRecordCount));
   updateFaceBoxes(points, totalRecordCount);
+  updateFaceMapBox(points, totalRecordCount);
 
   scrn.render();
 };

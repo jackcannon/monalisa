@@ -1,16 +1,15 @@
 import { Servo, Servos, Animation } from "johnny-five";
-import { IPoint } from "./interfaces";
+import { Subject } from "rxjs";
+
+import { IPoint, MOVE_TYPE, MOVEMENT_TYPE } from "./interfaces";
 import {
   createTimer,
   toFixed,
   distanceBetweenPoints,
   getPromise
 } from "./utils";
-import { log } from "./dashboard";
 
 import { FOVX, FOVY, easeType, moveSpeed, moveType } from "./config";
-import { MOVE_TYPE, MOVEMENT_TYPE } from "./types";
-import { Subject } from "rxjs";
 
 const servos: { [servoName: string]: Servo } = {};
 
@@ -115,7 +114,6 @@ const queueEaseAnimation = (
   movementType: MOVEMENT_TYPE
 ): Promise<any> =>
   new Promise((resolve, reject) => {
-    log.log("easing func", easeType[movementType]);
     animation.enqueue({
       duration,
       cuePoints: [0, 1],
