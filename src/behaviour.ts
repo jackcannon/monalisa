@@ -1,4 +1,4 @@
-import { IFacePoint, ILookedAt, IPoint, MOVEMENT_TYPE } from "./interfaces";
+import { IFaceRecord, ILookedAt, IPoint, MOVEMENT_TYPE } from "./interfaces";
 import * as movement from "./movement";
 import * as eyes from "./eyes";
 import { BehaviorSubject } from "rxjs";
@@ -21,7 +21,7 @@ enum EYE_TYPE {
   WINKING = "winking"
 }
 
-let facesSubject: BehaviorSubject<IFacePoint[]>;
+let facesSubject: BehaviorSubject<IFaceRecord[]>;
 let count = 0;
 let lastLookedAt: ILookedAt = {
   face: null,
@@ -32,12 +32,12 @@ let lastLookedAt: ILookedAt = {
 };
 let lookingAroundRandomly: number = null;
 
-export const setup = (subject: BehaviorSubject<IFacePoint[]>) => {
+export const setup = (subject: BehaviorSubject<IFaceRecord[]>) => {
   facesSubject = subject;
 
   facesSubject
     .pipe(filter(faces => !!faces))
-    .subscribe((faces: IFacePoint[]) => onFaces(faces));
+    .subscribe((faces: IFaceRecord[]) => onFaces(faces));
 
   facesSubject.pipe(first()).subscribe(() => {
     eyes.drawFrame();
@@ -96,8 +96,8 @@ export const resetLookedAt = () => {
 };
 
 export const updateLookedAt = (
-  pick: IFacePoint,
-  faces?: IFacePoint[],
+  pick: IFaceRecord,
+  faces?: IFaceRecord[],
   sameFace?: boolean
 ) => {
   if (!pick) {
@@ -125,7 +125,7 @@ export const updateLookedAt = (
 };
 
 // Determine which of the current faces is most likely to be the last looked at
-const getLastLookedByDistances = (faces: IFacePoint[]): IFacePoint[] => {
+const getLastLookedByDistances = (faces: IFaceRecord[]): IFaceRecord[] => {
   if (!lastLookedAt.face) return faces;
   const distances = faces.map(face =>
     distanceBetweenPoints(lastLookedAt.face, face)
@@ -136,7 +136,7 @@ const getLastLookedByDistances = (faces: IFacePoint[]): IFacePoint[] => {
   return sorted;
 };
 
-export const lookAt = (pick: IFacePoint) => {
+export const lookAt = (pick: IFaceRecord) => {
   const distance = movement.getDistance(pick);
   movement
     .toRelativeDegrees(pick, MOVEMENT_TYPE.FACE)
@@ -181,7 +181,7 @@ const eyesAfterLook = distance => {
   }
 };
 
-export const onFaces = (faces: IFacePoint[]) => {
+export const onFaces = (faces: IFaceRecord[]) => {
   if (faces.length > 0) {
     onSeeingFaces(faces);
     lookingAroundRandomly = null;
@@ -209,7 +209,7 @@ export const onFaces = (faces: IFacePoint[]) => {
   }
 };
 
-const onSeeingFaces = (faces: IFacePoint[]) => {
+const onSeeingFaces = (faces: IFaceRecord[]) => {
   if (faces.length === 1) {
     // look at only person
     lookAt(faces[0]);

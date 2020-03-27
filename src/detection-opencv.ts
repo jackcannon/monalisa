@@ -1,7 +1,7 @@
 import cv from "opencv";
 import { BehaviorSubject } from "rxjs";
 
-import { IFacePoint } from "./interfaces";
+import { IFaceRecord } from "./interfaces";
 import { toFixed, getPromise } from "./utils";
 import { cameraOptions, savePhotoOnDetection, opencvConfig } from "./config";
 import { getFrames } from "./cameraHelper";
@@ -9,8 +9,8 @@ import { log } from "./dashboard";
 
 const dataPath = `./src/opencv/${opencvConfig.dataName}.xml`;
 
-let pointsSubject: BehaviorSubject<IFacePoint[]> = new BehaviorSubject<
-  IFacePoint[]
+let pointsSubject: BehaviorSubject<IFaceRecord[]> = new BehaviorSubject<
+  IFaceRecord[]
 >(null);
 let framesSubject: BehaviorSubject<Buffer> = null;
 let detectCount: number = 0;
@@ -23,7 +23,7 @@ interface ICVBox {
 }
 
 export const startDetection = async (): Promise<BehaviorSubject<
-  IFacePoint[]
+  IFaceRecord[]
 >> => {
   framesSubject = await getFrames();
   startProcessing();
@@ -50,20 +50,21 @@ const cvDetectFaces = (im): Promise<ICVBox[]> =>
     );
   });
 
-const detect = async (imgBuffer): Promise<IFacePoint[]> => {
+const detect = async (imgBuffer): Promise<IFaceRecord[]> => {
   const im = await cvReadImage(imgBuffer);
   const boxes = await cvDetectFaces(im);
-  const faces = boxes.map(boxToPoint);
+  const faces = boxes.map(boxToPoint(Date.now()));
   if (faces.length && savePhotoOnDetection) {
     saveOutput(im, faces);
   }
   return faces;
 };
 
-const boxToPoint = (box: ICVBox): IFacePoint => ({
+const boxToPoint = (time: number) => (box: ICVBox): IFaceRecord => ({
   x: toFixed((box.x + box.width * 0.5) / cameraOptions.width, 6),
   y: toFixed((box.y + box.height * 0.5) / cameraOptions.height, 6),
-  score: 1
+  score: 1,
+  time
 });
 
 const saveOutput = async (im, faces) => {

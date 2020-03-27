@@ -2,7 +2,7 @@ import cv from "opencv";
 import { parentPort, isMainThread, threadId } from "worker_threads";
 import { BehaviorSubject } from "rxjs";
 
-import { IFacePoint } from "./interfaces";
+import { IFaceRecord } from "./interfaces";
 import { toFixed } from "./utils";
 import { cameraOptions, savePhotoOnDetection, opencvConfig } from "./config";
 import { getFrames } from "./cameraHelper";
@@ -29,27 +29,19 @@ interface ICVBox {
 // });
 
 const setup = async () => {
-  log.log("worker-opencv - setup - A");
   framesSubject = await getFrames();
-  log.log("worker-opencv - setup - B");
   await framesSubject.toPromise();
-  log.log("worker-opencv - setup - C");
   parentPort.postMessage({ type: "init" });
-  log.log("worker-opencv - setup - D");
 };
 
 const startProcessing = async () => {
-  log.log("worker-opencv - startProcessing - A");
   const points = await detect(framesSubject.value);
-  log.log("worker-opencv - startProcessing - B");
   detectCount++;
-  log.log("worker-opencv - startProcessing - C");
   parentPort.postMessage({
     type: "points",
     points,
     count: detectCount
   });
-  log.log("worker-opencv - startProcessing - D");
   startProcessing();
 };
 
@@ -84,20 +76,21 @@ const cvDetectFaces = (im): Promise<ICVBox[]> =>
     );
   });
 
-const detect = async (imgBuffer): Promise<IFacePoint[]> => {
+const detect = async (imgBuffer): Promise<IFaceRecord[]> => {
   const im = await cvReadImage(imgBuffer);
   const boxes = await cvDetectFaces(im);
-  const faces = boxes.map(boxToPoint);
+  const faces = boxes.map(boxToPoint(Date.now()));
   if (faces.length && savePhotoOnDetection) {
     saveOutput(im, faces);
   }
   return faces;
 };
 
-const boxToPoint = (box: ICVBox): IFacePoint => ({
+const boxToPoint = (time: number) => (box: ICVBox): IFaceRecord => ({
   x: toFixed((box.x + box.width * 0.5) / cameraOptions.width, 6),
   y: toFixed((box.y + box.height * 0.5) / cameraOptions.height, 6),
-  score: 1
+  score: 1,
+  time
 });
 
 const saveOutput = async (im, faces) => {

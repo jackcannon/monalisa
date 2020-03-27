@@ -1,6 +1,6 @@
 import { fork } from "child_process";
 import { showDashboard } from "./config";
-import { IFacePoint } from "./interfaces";
+import { IFaceRecord } from "./interfaces";
 import {
   IChildProcessMessage,
   IDashboardSetup,
@@ -48,7 +48,7 @@ export const setup = start => {
 };
 
 // PUBLIC FUNCTIONS
-export const addRecord = (points: IFacePoint[], delta: number) => {
+export const addRecord = (points: IFaceRecord[], delta: number) => {
   if (showDashboard && childProcess) {
     childProcess.send({
       type: "record",

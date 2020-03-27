@@ -2,7 +2,7 @@ import { Worker, isMainThread, parentPort, workerData } from "worker_threads";
 import { BehaviorSubject } from "rxjs";
 import { filter } from "rxjs/operators";
 
-import { IFacePoint, DETECTION_TYPE, IWorkerDetect } from "./interfaces";
+import { IFaceRecord, DETECTION_TYPE, IWorkerDetect } from "./interfaces";
 import { getFrames } from "./cameraHelper";
 import { getPromise } from "./utils";
 
@@ -14,14 +14,14 @@ const workerPaths = {
 let worker;
 let workerMsgs: BehaviorSubject<any> = new BehaviorSubject<any>(null);
 
-let pointsSubject: BehaviorSubject<IFacePoint[]> = new BehaviorSubject<
-  IFacePoint[]
+let pointsSubject: BehaviorSubject<IFaceRecord[]> = new BehaviorSubject<
+  IFaceRecord[]
 >(null);
 let framesSubject: BehaviorSubject<Buffer> = null;
 
 export const startDetection = async (
   workerType: DETECTION_TYPE
-): Promise<BehaviorSubject<IFacePoint[]>> => {
+): Promise<BehaviorSubject<IFaceRecord[]>> => {
   framesSubject = await getFrames();
   await createWorker(workerType);
   startProcessing();

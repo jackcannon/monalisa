@@ -1,4 +1,4 @@
-import { IFacePoint } from "./interfaces";
+import { IFaceRecord } from "./interfaces";
 
 export interface IChildProcessMessage {
   type: string;
@@ -11,6 +11,6 @@ export interface IDashboardLog extends IChildProcessMessage {
   data: any[];
 }
 export interface IDashboardRecord extends IChildProcessMessage {
-  points: IFacePoint[];
+  points: IFaceRecord[];
   delta: number;
 }

@@ -1,5 +1,5 @@
 import { workerData, parentPort, isMainThread } from "worker_threads";
-import { IFacePoint } from "./interfaces";
+import { IFaceRecord } from "./interfaces";
 import * as pico from "./lib/pico";
 import * as canvas from "canvas";
 import fetch from "node-fetch";
@@ -48,7 +48,7 @@ const handleDetectMsg = async (msg: { type: string; buffer: Uint8Array }) => {
   });
 };
 
-const detect = async (imgBuffer): Promise<IFacePoint[]> => {
+const detect = async (imgBuffer): Promise<IFaceRecord[]> => {
   const timer = createTimer("detect");
 
   const img = await canvas.loadImage(imgBuffer as any);
@@ -63,13 +63,16 @@ const detect = async (imgBuffer): Promise<IFacePoint[]> => {
   const dets = findFace(ctx);
   timer("findFaces");
   // console.log("dets", dets);
-  return dets.map(convertToFacePoint);
+  return dets.map(convertToFacePoint(Date.now()));
 };
 
-const convertToFacePoint = (detection: IPicoDetection): IFacePoint => ({
+const convertToFacePoint = (time: number) => (
+  detection: IPicoDetection
+): IFaceRecord => ({
   x: toFixed(detection.x, 6),
   y: toFixed(detection.y, 6),
-  score: 1
+  score: 1,
+  time
 });
 
 /*

@@ -6,7 +6,7 @@ import {
   saveFile
 } from "./face-api/examples-nodejs/commons";
 import {
-  IFacePoint,
+  IFaceRecord,
   IWorkerInit,
   IWorkerDetect,
   IWorkerPoints
@@ -43,7 +43,7 @@ const handleDetectMsg = async (msg: IWorkerDetect) => {
   } as IWorkerPoints);
 };
 
-const detect = async (imgBuffer): Promise<IFacePoint[]> => {
+const detect = async (imgBuffer): Promise<IFaceRecord[]> => {
   if (faceApiConfig.singleFace) {
     return await detectSingle(imgBuffer);
   } else {
@@ -51,28 +51,33 @@ const detect = async (imgBuffer): Promise<IFacePoint[]> => {
   }
 };
 
-const detectSingle = async (imgBuffer): Promise<IFacePoint[]> => {
+const detectSingle = async (imgBuffer): Promise<IFaceRecord[]> => {
   const img = await canvas.loadImage(imgBuffer as any);
   const detection = await faceapi.detectSingleFace(img, faceDetectionOptions);
   if (detection && savePhotoOnDetection) {
     saveOutput(img, [detection]);
   }
-  return [detection].filter(detection => detection).map(detectionToPoint);
+  return [detection]
+    .filter(detection => detection)
+    .map(detectionToPoint(Date.now()));
 };
 
-const detectMulti = async (imgBuffer): Promise<IFacePoint[]> => {
+const detectMulti = async (imgBuffer): Promise<IFaceRecord[]> => {
   const img = await canvas.loadImage(imgBuffer as any);
   const detections = await faceapi.detectAllFaces(img, faceDetectionOptions);
   if (detections.length && savePhotoOnDetection) {
     saveOutput(img, detections);
   }
-  return detections.map(detectionToPoint);
+  return detections.map(detectionToPoint(Date.now()));
 };
 
-const detectionToPoint = (d: faceapi.FaceDetection): IFacePoint => ({
+const detectionToPoint = (time: number) => (
+  d: faceapi.FaceDetection
+): IFaceRecord => ({
   x: toFixed((d.box.x + d.box.width * 0.5) / cameraOptions.width, 6),
   y: toFixed((d.box.y + d.box.height * 0.5) / cameraOptions.height, 6),
-  score: toFixed(d.score, 6)
+  score: toFixed(d.score, 6),
+  time
 });
 
 const saveOutput = async (img, detections) => {

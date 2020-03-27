@@ -8,15 +8,15 @@ export interface IFacePoint extends IPoint {
 }
 
 export interface IFaceRecord extends IFacePoint {
-  timestamp: Date;
+  time: number;
 }
 
 export interface ILookedAt {
-  face: IFacePoint;
+  face: IFaceRecord;
   firstSeen: number;
   lastSeen: number;
   count: number;
-  otherFaces?: IFacePoint[];
+  otherFaces?: IFaceRecord[];
 }
 
 export interface IEyeConfig {
@@ -96,7 +96,7 @@ export interface IWorkerDetect extends IWorkerMessage {
 }
 
 export interface IWorkerPoints extends IWorkerMessage {
-  points: IFacePoint[];
+  points: IFaceRecord[];
 }
 
 // Child Process messages
@@ -111,6 +111,6 @@ export interface IDashboardLog extends IChildProcessMessage {
   data: any[];
 }
 export interface IDashboardRecord extends IChildProcessMessage {
-  points: IFacePoint[];
+  points: IFaceRecord[];
   delta: number;
 }

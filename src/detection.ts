@@ -2,7 +2,7 @@ import { BehaviorSubject } from "rxjs";
 import { filter } from "rxjs/operators";
 
 import { createTimer, toFixed } from "./utils";
-import { IFacePoint, DETECTION_TYPE } from "./interfaces";
+import { IFaceRecord, DETECTION_TYPE } from "./interfaces";
 import { log, addRecord } from "./dashboard";
 import { useWorker, detectionType } from "./config";
 
@@ -15,7 +15,7 @@ if (detectionType === DETECTION_TYPE.FACEAPI && !useWorker) {
 }
 import { startDetection as startWorker } from "./detection-worker";
 
-let pointsSubject: BehaviorSubject<IFacePoint[]> = null;
+let pointsSubject: BehaviorSubject<IFaceRecord[]> = null;
 
 const getDetectionStart = (): Function => {
   if (useWorker) {
@@ -28,7 +28,7 @@ const getDetectionStart = (): Function => {
   }
 };
 
-export const setup = async (): Promise<BehaviorSubject<IFacePoint[]>> => {
+export const setup = async (): Promise<BehaviorSubject<IFaceRecord[]>> => {
   pointsSubject = await getDetectionStart()();
   startListening();
 
@@ -40,11 +40,15 @@ const startListening = () => {
   pointsSubject.pipe(filter(points => !!points)).subscribe(points => {
     const delta = timer();
 
-    const displayPoints = points.map(point => ({
-      x: toFixed(point.x, 2),
-      y: toFixed(point.y, 2),
-      score: point.score
-    }));
+    const displayPoints = points.map(
+      point =>
+        ({
+          x: toFixed(point.x, 2),
+          y: toFixed(point.y, 2),
+          score: point.score,
+          time: point.time
+        } as IFaceRecord)
+    );
     addRecord(displayPoints, delta);
   });
 };
