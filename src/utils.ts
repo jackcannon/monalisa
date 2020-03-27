@@ -39,6 +39,17 @@ export const randomID = () => 1000000 + Math.floor(Math.random() * 9000000);
 export const getPromise = (subject: Subject<any>): Promise<any> =>
   subject.pipe(first(item => !!item)).toPromise();
 
+export const blessedStyleText = (text: string, fg?: string, bg?: string) => {
+  let result = text;
+  if (fg) {
+    result = `{${fg}-fg}${result}{/${fg}-fg}`;
+  }
+  if (bg) {
+    result = `{${bg}-bg}${result}{/${bg}-bg}`;
+  }
+  return result;
+};
+
 export const formatAsciiNumbers = (str: string): string[] => {
   const chars = {
     "0": ["  ███  ", "██   ██", "██   ██", "██   ██", "  ███  "],

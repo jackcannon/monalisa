@@ -7,6 +7,10 @@ export interface IFacePoint extends IPoint {
   score: number;
 }
 
+export interface IFaceRecord extends IFacePoint {
+  timestamp: Date;
+}
+
 export interface ILookedAt {
   face: IFacePoint;
   firstSeen: number;

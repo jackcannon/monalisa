@@ -76,10 +76,10 @@ export const faceApiConfig = {
 };
 
 export const opencvConfig = {
-  // dataName: 'haarcascade_frontalface_alt_tree',
-  // dataName: 'haarcascade_frontalface_alt',
-  dataName: "haarcascade_frontalface_alt2"
-  // dataName: 'haarcascade_frontalface_default',
+  // dataName: "haarcascade_frontalface_alt_tree"
+  dataName: "haarcascade_frontalface_alt"
+  // dataName: "haarcascade_frontalface_alt2"
+  // dataName: "haarcascade_frontalface_default"
   // dataName: 'haarcascade_frontalface_profileface',
 };
 
@@ -130,3 +130,6 @@ export const randomBlinking = false;
 
 export const lookRandomlyAtSomethingDurationBase = 5000;
 export const lookRandomlyAtSomethingDurationRandom = 5000;
+
+export const sameFaceThreshold = photoWidth * 0.1;
+export const cullFaceThreshold = photoWidth * 0.15;

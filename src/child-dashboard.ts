@@ -1,4 +1,9 @@
-import { formatTime, formatAsciiNumbers, getSymbolsFromAscii } from "./utils";
+import {
+  formatTime,
+  formatAsciiNumbers,
+  getSymbolsFromAscii,
+  blessedStyleText
+} from "./utils";
 import {
   savePhotoOnDetection,
   photoWidth,
@@ -22,6 +27,16 @@ const blessed = require("blessed");
 const contrib = require("blessed-contrib");
 
 const dataLength = -100;
+
+const faceColours = [
+  "magenta",
+  "cyan",
+  "yellow",
+  "white",
+  "red",
+  "green",
+  "blue"
+];
 
 const configArr = [
   ["savePhotoOnDetection", savePhotoOnDetection],
@@ -67,9 +82,9 @@ const scrn = blessed.screen();
 const grid = new contrib.grid({ rows: 12, cols: 12, screen: scrn });
 
 // SETUP GRID
-const dashLog = grid.set(3, 0, 6, 6, contrib.log, {
-  fg: [128, 128, 128],
-  selectedFg: [128, 128, 128],
+const dashLog = grid.set(9, 3, 3, 3, contrib.log, {
+  fg: "brightblue",
+  selectedFg: "white",
   label: "Main Log"
 });
 const log = (msg: IDashboardLog) =>
@@ -124,7 +139,7 @@ const lifetime = grid.set(0, 0, 3, 6, blessed.box, {
   style: {
     bold: true,
     border: {
-      fg: "white"
+      fg: "black"
     }
   }
 });
@@ -162,13 +177,13 @@ const configBox1 = grid.set(9, 0, 3, 3, blessed.box, {
   }
 });
 
-const faceMapBox = grid.set(9, 3, 3, 3, blessed.box, {
+const faceMapBox = grid.set(3, 0, 6, 6, blessed.box, {
   label: "Face Map",
   tags: true,
   content: "",
   style: {
     border: {
-      fg: "blue"
+      fg: "white"
     }
   }
 });
@@ -184,8 +199,8 @@ const formatFaceNumData = (records, count: number) => ({
   x: records.map((_v, i) => (i + count - records.length).toString()),
   y: records.map(points => points.length)
 });
-const formatFaceContent = points => {
-  let str = points ? "{green-fg}" : "{white-fg}";
+const formatFaceContent = (points, colour: string) => {
+  let str = points ? `{${colour}-fg}` : "{white-fg}";
   if (points) {
     str += `
 {center}      XXX{/center}
@@ -212,10 +227,11 @@ Score: ${points.score}
 };
 const updateFaceBoxes = (records, count) => {
   faces.forEach((face, i) => {
-    const content = formatFaceContent(records[i]);
+    const colour = faceColours[i % faceColours.length];
+    const content = formatFaceContent(records[i], colour);
     face.setContent(content);
     face.style.border = {
-      fg: records[i] ? "green" : "black"
+      fg: records[i] ? colour : "black"
     };
   });
 };
@@ -224,32 +240,24 @@ const updateFaceMapBox = (records, count) => {
   const height = faceMapBox.height - 2;
   const empty = " ";
 
-  const faceColours = [
-    "blue",
-    "red",
-    "yellow",
-    "green",
-    "magenta",
-    "cyan",
-    "white",
-
-    "red",
-    "red",
-    "red",
-    "red",
-    "red",
-    "red"
-  ];
   const space = new Array(height)
     .fill(1)
     .map(() => new Array(width).fill(empty));
 
-  const ascii = ["  ___  ", " /   \\ ", "|  X  |", " \\   / ", "  ‾‾‾  "];
-  //  ___
-  // /   \
-  //|  X  |
-  // \   /
-  //  ‾‾‾
+  // const ascii = [
+  //   "  .-----.  ",
+  //   " /       \\ ",
+  //   "|    X    |",
+  //   " \\       / ",
+  //   "  '-----'  "
+  // ];
+  const ascii = [
+    "  .---.  ",
+    " /     \\ ",
+    "|   X   |",
+    " \\     / ",
+    "  '---'  "
+  ];
 
   const markers = getSymbolsFromAscii(ascii);
 
@@ -257,9 +265,8 @@ const updateFaceMapBox = (records, count) => {
   records.map((face, i) => {
     const x = limit(width - Math.ceil(width * face.x), width);
     const y = limit(Math.floor(height * face.y), height);
-    const faceCol = faceColours[i];
-    const displayString = `{white-fg}{${faceCol}-bg}${i +
-      1}{/${faceCol}-bg}{/white-fg}`;
+    const faceCol = faceColours[i % faceColours.length];
+    const displayString = blessedStyleText(i + 1, faceCol);
     space[y].splice(x, 1, displayString);
 
     markers
@@ -269,9 +276,11 @@ const updateFaceMapBox = (records, count) => {
           space[y + mY][x + mX] &&
           space[y + mY][x + mX] === empty
       )
-      .forEach(({ x: mX, y: mY, char }) =>
-        space[y + mY].splice(x + mX, 1, char)
-      );
+      .forEach(({ x: mX, y: mY, char }) => {
+        const char2 = char === "#" ? " " : char;
+        const dispChar = blessedStyleText(char2, faceCol);
+        space[y + mY].splice(x + mX, 1, dispChar);
+      });
   });
   faceMapBox.setContent(space.map(col => col.join("")).join(""));
 };
@@ -320,7 +329,10 @@ setInterval(() => {
   content += displayRows
     .map(row => `{center}${row}{/center}`)
     .join("\n")
-    .replace(/█{1,}/g, match => `{white-bg}${match}{/white-bg}`);
+    .replace(
+      /█{1,}/g,
+      match => `{white-bg}${" ".repeat(match.length)}{/white-bg}`
+    );
 
   lifetime.setContent(content);
   scrn.render();
