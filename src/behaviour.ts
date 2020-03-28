@@ -95,7 +95,7 @@ export const updateLookedAt = (pick: IFaceRecord, faces?: IFaceRecord[], sameFac
     lastLookedAt.firstSeen = Date.now();
     lastLookedAt.lastSeen = Date.now();
     lastLookedAt.count = 1;
-    lastLookedAt.otherFaces = faces.filter(face => face !== pick);
+    lastLookedAt.otherFaces = faces.filter((face) => face !== pick);
     return;
   }
   if (sameFace) {
