@@ -1,15 +1,10 @@
-import { Servo, Servos, Animation } from "johnny-five";
-import { Subject } from "rxjs";
+import { Servo, Servos, Animation } from 'johnny-five';
+import { Subject } from 'rxjs';
 
-import { IPoint, MOVE_TYPE, MOVEMENT_TYPE } from "./interfaces";
-import {
-  createTimer,
-  toFixed,
-  distanceBetweenPoints,
-  getPromise
-} from "./utils";
+import { IPoint, MOVE_TYPE, MOVEMENT_TYPE } from './interfaces';
+import { createTimer, toFixed, distanceBetweenPoints, getPromise } from './utils';
 
-import { FOVX, FOVY, easeType, moveSpeed, moveType } from "./config";
+import { FOVX, FOVY, easeType, moveSpeed, moveType } from './config';
 
 const servos: { [servoName: string]: Servo } = {};
 
@@ -27,24 +22,24 @@ const centrePosX = 85;
 // const centrePosY = 102;
 const centrePosY = 98;
 
-const timer = createTimer("movement");
+const timer = createTimer('movement');
 
 export const setup = () => {
   servos.base = new Servo({
-    controller: "PCA9685",
+    controller: 'PCA9685',
     pin: 0,
     center: true,
-    startAt: startingPosX
+    startAt: startingPosX,
   });
-  setupMoveCompleteSubject(servos.base, "base");
+  setupMoveCompleteSubject(servos.base, 'base');
 
   servos.head = new Servo({
-    controller: "PCA9685",
+    controller: 'PCA9685',
     pin: 3,
     range: [0, 125],
-    startAt: startingPosY
+    startAt: startingPosY,
   });
-  setupMoveCompleteSubject(servos.base, "head");
+  setupMoveCompleteSubject(servos.base, 'head');
 
   animationX = new Animation(servos.base);
   animationY = new Animation(servos.head);
@@ -52,7 +47,7 @@ export const setup = () => {
 
 const setupMoveCompleteSubject = (servo, servoName) => {
   moveCompleteSubject[servoName] = new Subject<void>();
-  servo.on("move:complete", () => {
+  servo.on('move:complete', () => {
     moveCompleteSubject[servoName].next();
   });
 };
@@ -64,7 +59,7 @@ export const reset = () => {
 
 export const move = async (servoName, position, time = 1000) => {
   let servo = servos[servoName];
-  if (!servo && typeof servoName !== "string" && servoName instanceof Servo) {
+  if (!servo && typeof servoName !== 'string' && servoName instanceof Servo) {
     servo = servoName;
   }
   const moveComplete = getPromise(moveCompleteSubject[servoName]);
@@ -80,10 +75,7 @@ const getDurationFromSpeed = (pos: IPoint, speed: number = 20) => {
   return duration;
 };
 
-export const toPos = (
-  pos: IPoint = { x: 90, y: 90 },
-  movementType: MOVEMENT_TYPE
-) => {
+export const toPos = (pos: IPoint = { x: 90, y: 90 }, movementType: MOVEMENT_TYPE) => {
   const type = moveType[movementType];
   const speed = moveSpeed[movementType];
   switch (type) {
@@ -95,15 +87,9 @@ export const toPos = (
 };
 
 // Speed. Higher = slower
-export const look = (
-  pos: IPoint = { x: 90, y: 90 },
-  speed?: number
-): Promise<any> => {
+export const look = (pos: IPoint = { x: 90, y: 90 }, speed?: number): Promise<any> => {
   const duration = getDurationFromSpeed(pos, speed);
-  return Promise.all([
-    move("base", pos.x, duration),
-    move("head", pos.y, duration)
-  ]);
+  return Promise.all([move('base', pos.x, duration), move('head', pos.y, duration)]);
 };
 
 const queueEaseAnimation = (
@@ -111,19 +97,16 @@ const queueEaseAnimation = (
   fromVal: number,
   toVal: number,
   duration: number,
-  movementType: MOVEMENT_TYPE
+  movementType: MOVEMENT_TYPE,
 ): Promise<any> =>
   new Promise((resolve, reject) => {
     animation.enqueue({
       duration,
       cuePoints: [0, 1],
-      keyFrames: [
-        { degrees: fromVal, easing: easeType[movementType] },
-        { degrees: toVal }
-      ],
+      keyFrames: [{ degrees: fromVal, easing: easeType[movementType] }, { degrees: toVal }],
       // onstop: reject,
       onstop: resolve,
-      oncomplete: resolve
+      oncomplete: resolve,
     });
   });
 
@@ -131,7 +114,7 @@ const queueEaseAnimation = (
 export const ease = (
   pos: IPoint = { x: 90, y: 90 },
   speed: number = 20,
-  movementType: MOVEMENT_TYPE
+  movementType: MOVEMENT_TYPE,
 ): Promise<any> => {
   current = current.then(() => {
     // animationX.stop();
@@ -139,20 +122,8 @@ export const ease = (
     const currentPos = getCurrent();
     const duration = getDurationFromSpeed(pos, speed);
     return Promise.all([
-      queueEaseAnimation(
-        animationX,
-        currentPos.x,
-        pos.x,
-        duration,
-        movementType
-      ),
-      queueEaseAnimation(
-        animationY,
-        currentPos.y,
-        pos.y,
-        duration,
-        movementType
-      )
+      queueEaseAnimation(animationX, currentPos.x, pos.x, duration, movementType),
+      queueEaseAnimation(animationY, currentPos.y, pos.y, duration, movementType),
     ]);
   });
   return current;
@@ -160,13 +131,13 @@ export const ease = (
 
 export const getCurrent = () => ({
   x: servos.base.value,
-  y: servos.head.value
+  y: servos.head.value,
 });
 
 // Speed. Higher = slower
 export const toRelativeDegrees = (
   posCardinal: IPoint = { x: 0.5, y: 0.5 },
-  movementType: MOVEMENT_TYPE
+  movementType: MOVEMENT_TYPE,
 ): Promise<any> => {
   const pos = cardinalToDegrees(posCardinal);
   return toPos(pos, movementType);
@@ -202,19 +173,14 @@ export const toRelativeDegrees = (
 //   return ease(pos, speed);
 // };
 
-export const getDistance = (
-  posCardinal: IPoint = { x: 0.5, y: 0.5 }
-): number => {
+export const getDistance = (posCardinal: IPoint = { x: 0.5, y: 0.5 }): number => {
   const pos = cardinalToDegrees(posCardinal);
   const current = getCurrent();
   const distance = distanceBetweenPoints(pos, current);
   return distance;
 };
 
-const cardinalToDegrees = (
-  pos: IPoint,
-  baseDegrees = { x: centrePosX, y: centrePosY }
-) => ({
+const cardinalToDegrees = (pos: IPoint, baseDegrees = { x: centrePosX, y: centrePosY }) => ({
   x: toFixed(baseDegrees.x - FOVX / 2 + (1 - pos.x) * FOVX, 1),
-  y: toFixed(baseDegrees.y - FOVY / 2 + pos.y * FOVY, 1)
+  y: toFixed(baseDegrees.y - FOVY / 2 + pos.y * FOVY, 1),
 });

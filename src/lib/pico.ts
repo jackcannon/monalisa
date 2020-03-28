@@ -1,5 +1,5 @@
 /* This library is released under the MIT license, see https://github.com/tehnokv/picojs */
-export const unpack_cascade = function(bytes) {
+export const unpack_cascade = function (bytes) {
   //
   const dview = new DataView(new ArrayBuffer(4));
   /*
@@ -34,10 +34,7 @@ export const unpack_cascade = function(bytes) {
   for (let t = 0; t < ntrees; ++t) {
     // read the binary tests placed in internal tree nodes
     Array.prototype.push.apply(tcodes_ls, [0, 0, 0, 0]);
-    Array.prototype.push.apply(
-      tcodes_ls,
-      bytes.slice(p, p + 4 * Math.pow(2, tdepth) - 4)
-    );
+    Array.prototype.push.apply(tcodes_ls, bytes.slice(p, p + 4 * Math.pow(2, tdepth) - 4));
     p = p + 4 * Math.pow(2, tdepth) - 4;
     // read the prediction in the leaf nodes of the tree
     for (let i = 0; i < Math.pow(2, tdepth); ++i) {
@@ -103,7 +100,7 @@ export const unpack_cascade = function(bytes) {
   return classify_region;
 };
 
-export const run_cascade = function(image, classify_region, params) {
+export const run_cascade = function (image, classify_region, params) {
   const pixels = image.pixels;
   const nrows = image.nrows;
   const ncols = image.ncols;
@@ -133,11 +130,11 @@ export const run_cascade = function(image, classify_region, params) {
   return detections;
 };
 
-export const cluster_detections = function(dets, iouthreshold) {
+export const cluster_detections = function (dets, iouthreshold) {
   /*
 		sort detections by their score
 	*/
-  dets = dets.sort(function(a, b) {
+  dets = dets.sort(function (a, b) {
     return b[3] - a[3];
   });
   /*
@@ -195,7 +192,7 @@ export const cluster_detections = function(dets, iouthreshold) {
   return clusters;
 };
 
-export const instantiate_detection_memory = function(size) {
+export const instantiate_detection_memory = function (size) {
   /*
 		initialize a circular buffer of `size` elements
 	*/

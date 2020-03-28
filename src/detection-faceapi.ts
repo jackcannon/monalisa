@@ -5,25 +5,23 @@
  * but using the same interface as detection-opencv
  */
 
-import * as faceapi from "face-api.js";
+import * as faceapi from 'face-api.js';
 import {
   canvas,
   faceDetectionNet,
   getFaceDetectorOptions,
-  saveFile
-} from "./face-api/examples-nodejs/commons";
+  saveFile,
+} from './face-api/examples-nodejs/commons';
 
-import { BehaviorSubject } from "rxjs";
-import { first } from "rxjs/operators";
+import { BehaviorSubject } from 'rxjs';
+import { first } from 'rxjs/operators';
 
-import { IFacePoint } from "./interfaces";
-import { toFixed, getPromise } from "./utils";
-import { cameraOptions, savePhotoOnDetection, faceApiConfig } from "./config";
-import { getFrames } from "./cameraHelper";
+import { IFacePoint } from './interfaces';
+import { toFixed, getPromise } from './utils';
+import { cameraOptions, savePhotoOnDetection, faceApiConfig } from './config';
+import { getFrames } from './cameraHelper';
 
-let recordsSubject: BehaviorSubject<IFacePoint[]> = new BehaviorSubject<
-  IFacePoint[]
->(null);
+let recordsSubject: BehaviorSubject<IFacePoint[]> = new BehaviorSubject<IFacePoint[]>(null);
 let framesSubject: BehaviorSubject<Buffer> = null;
 let detectCount: number = 0;
 let faceDetectionOptions;
@@ -31,16 +29,14 @@ let faceDetectionOptions;
 let queue;
 
 const setup = async () => {
-  await faceDetectionNet.loadFromDisk("./src/face-api/weights");
+  await faceDetectionNet.loadFromDisk('./src/face-api/weights');
   faceDetectionOptions = getFaceDetectorOptions(faceDetectionNet, {
     minFaceSize: faceApiConfig.minFaceSize,
-    scaleFactor: 0.8
+    scaleFactor: 0.8,
   });
 };
 
-export const startDetection = async (): Promise<BehaviorSubject<
-  IFacePoint[]
->> => {
+export const startDetection = async (): Promise<BehaviorSubject<IFacePoint[]>> => {
   await setup();
   framesSubject = await getFrames();
 
@@ -103,15 +99,9 @@ const detectMulti = async (imgBuffer): Promise<IFacePoint[]> => {
 };
 
 const detectionToPoint = (detection: faceapi.FaceDetection): IFacePoint => ({
-  x: toFixed(
-    (detection.box.x + detection.box.width * 0.5) / cameraOptions.width,
-    6
-  ),
-  y: toFixed(
-    (detection.box.y + detection.box.height * 0.5) / cameraOptions.height,
-    6
-  ),
-  score: toFixed(detection.score, 6)
+  x: toFixed((detection.box.x + detection.box.width * 0.5) / cameraOptions.width, 6),
+  y: toFixed((detection.box.y + detection.box.height * 0.5) / cameraOptions.height, 6),
+  score: toFixed(detection.score, 6),
 });
 
 const saveOutput = async (img, detections) => {
@@ -119,8 +109,8 @@ const saveOutput = async (img, detections) => {
   faceapi.draw.drawDetections(out, detections);
   const now = new Date()
     .toISOString()
-    .replace(/T|:|\./g, "-")
+    .replace(/T|:|\./g, '-')
     .substring(0, 19);
   const outputName = `photos/${now}.jpg`;
-  saveFile(outputName, out.toBuffer("image/jpeg"));
+  saveFile(outputName, out.toBuffer('image/jpeg'));
 };

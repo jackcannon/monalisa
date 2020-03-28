@@ -1,11 +1,7 @@
-import { IFace, IFaceRecord, IPoint } from "./interfaces";
-import {
-  sameFaceThreshold,
-  cullFaceThreshold,
-  durationBeforeForgettingFace
-} from "./config";
-import { distanceBetweenPoints } from "./utils";
-import { log } from "./dashboard";
+import { IFace, IFaceRecord, IPoint } from './interfaces';
+import { sameFaceThreshold, cullFaceThreshold, durationBeforeForgettingFace } from './config';
+import { distanceBetweenPoints } from './utils';
+import { log } from './dashboard';
 
 const dataLimit = 100;
 
@@ -67,7 +63,7 @@ class FaceModel {
   toData(): { faces: IFace[]; target: IFace } {
     return {
       faces: this.knownFaces.map(face => face.toData()),
-      target: this.target && this.target.toData()
+      target: this.target && this.target.toData(),
     };
   }
 
@@ -89,22 +85,16 @@ class FaceModel {
       const pointsDistances = unused.map(point => face.distanceTo(point));
       const matches = unused
         .filter(p => pointsDistances[unused.indexOf(p)])
-        .sort(
-          (a, b) =>
-            pointsDistances[unused.indexOf(a)] -
-            pointsDistances[unused.indexOf(b)]
-        );
+        .sort((a, b) => pointsDistances[unused.indexOf(a)] - pointsDistances[unused.indexOf(b)]);
       face.update(matches[0]);
       unused.splice(unused.indexOf(matches[0]));
     });
 
     // removing old faces goes here
-    this.prioritisedFaces
-      .filter(face => face.isForgotten())
-      .forEach(face => this.removeFace(face));
+    this.prioritisedFaces.filter(face => face.isForgotten()).forEach(face => this.removeFace(face));
 
     const nonCulled = unused.filter(
-      point => !this.knownFaces.find(face => face.isInCullSpace(point))
+      point => !this.knownFaces.find(face => face.isInCullSpace(point)),
     );
     nonCulled.forEach(point => this.addFace(point));
   }

@@ -10,7 +10,7 @@ import {
   durationBeforeForgettingFace,
   lookRandomlyAtSomethingDurationBase,
   lookRandomlyAtSomethingDurationRandom,
-  randomBlinking
+  randomBlinking,
 } from './config';
 import { log, updatesFaces } from './dashboard';
 import { faceModel } from './faceModel';
@@ -22,7 +22,7 @@ let lastLookedAt: ILookedAt = {
   firstSeen: null,
   lastSeen: Date.now(),
   count: 1,
-  otherFaces: []
+  otherFaces: [],
 };
 let lookingAroundRandomly: number = null;
 
@@ -39,7 +39,7 @@ export const setup = (subject: BehaviorSubject<IFaceRecord[]>) => {
 export const drawEyes = (type: EYE_TYPE, eyeDirection: IPoint = { x: 0.5, y: 0.5 }) => {
   eyeDirection = {
     x: toFixed((eyeDirection.x * 2 - 1) * 0.8 * -1, 4),
-    y: toFixed((eyeDirection.y * 2 - 1) * 0.8 + 0.1, 4)
+    y: toFixed((eyeDirection.y * 2 - 1) * 0.8 + 0.1, 4),
   };
   switch (type) {
     case EYE_TYPE.LOOKING_AT_FACE:
@@ -51,14 +51,14 @@ export const drawEyes = (type: EYE_TYPE, eyeDirection: IPoint = { x: 0.5, y: 0.5
           eyelid: 32,
           // brow: true,
           cheek: true,
-          ...eyeDirection
+          ...eyeDirection,
         },
         {
           eyelid: 32,
           // brow: true,
           cheek: true,
-          ...eyeDirection
-        }
+          ...eyeDirection,
+        },
       ]);
       return;
     case EYE_TYPE.WINKING:
@@ -67,8 +67,8 @@ export const drawEyes = (type: EYE_TYPE, eyeDirection: IPoint = { x: 0.5, y: 0.5
         {
           eyelid: 100,
           brow: true,
-          cheek: true
-        }
+          cheek: true,
+        },
       ]);
       return;
     case EYE_TYPE.BLINKING:
@@ -127,7 +127,7 @@ export const lookAroundRandomly = (): Promise<IPoint> => {
   lookingAroundRandomly = lookID;
   const direction: IPoint = {
     x: toFixed(Math.random(), 3),
-    y: toFixed(Math.random(), 3)
+    y: toFixed(Math.random(), 3),
   };
   const move = movement.toRelativeDegrees(direction, MOVEMENT_TYPE.RANDOM);
 
@@ -135,8 +135,8 @@ export const lookAroundRandomly = (): Promise<IPoint> => {
     .then(() =>
       delay(
         lookRandomlyAtSomethingDurationBase +
-          Math.floor(Math.random() * lookRandomlyAtSomethingDurationRandom)
-      )
+          Math.floor(Math.random() * lookRandomlyAtSomethingDurationRandom),
+      ),
     )
     .then(() => {
       if (lookID === lookingAroundRandomly) {

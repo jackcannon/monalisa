@@ -1,5 +1,5 @@
-import { IFaceRecord, IFace } from "./interfaces";
-import { KnownFace } from "./faceModel";
+import { IFaceRecord, IFace } from './interfaces';
+import { KnownFace } from './faceModel';
 
 export interface IChildProcessMessage {
   type: string;

@@ -1,7 +1,7 @@
-import raspberryPiCamera from "raspberry-pi-camera-native";
-import { BehaviorSubject } from "rxjs";
-import { cameraOptions } from "./config";
-import { getPromise } from "./utils";
+import raspberryPiCamera from 'raspberry-pi-camera-native';
+import { BehaviorSubject } from 'rxjs';
+import { cameraOptions } from './config';
+import { getPromise } from './utils';
 
 let framesSubject: BehaviorSubject<Buffer> = new BehaviorSubject<Buffer>(null);
 
@@ -18,7 +18,7 @@ const startCamera = (): Promise<any> => {
 };
 
 const runCamera = (): Promise<any> => {
-  raspberryPiCamera.on("frame", (buffer: Buffer) => {
+  raspberryPiCamera.on('frame', (buffer: Buffer) => {
     framesSubject.next(buffer);
   });
   return getPromise(framesSubject);

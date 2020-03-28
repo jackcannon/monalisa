@@ -36,73 +36,73 @@ export interface IEyeConfig {
 }
 
 export enum DETECTION_TYPE {
-  OPENCV = "opencv",
-  FACEAPI = "faceapi",
-  PICO = "pico"
+  OPENCV = 'opencv',
+  FACEAPI = 'faceapi',
+  PICO = 'pico',
 }
 
 export enum OLED_LAYER {
   BACK = 0,
-  FORE = 1
+  FORE = 1,
 }
 
 export enum OLED_COLOR {
   BLACK = 0,
-  WHITE = 1
+  WHITE = 1,
 }
 
 export enum MOVEMENT_TYPE {
-  FACE = "face",
-  RANDOM = "random"
+  FACE = 'face',
+  RANDOM = 'random',
 }
 
 export enum MOVE_TYPE {
-  LOOK = "look",
-  EASE = "ease"
+  LOOK = 'look',
+  EASE = 'ease',
 }
 
 export enum EASE_TYPE {
-  linear = "linear",
-  inQuad = "inQuad",
-  outQuad = "outQuad",
-  inOutQuad = "inOutQuad",
-  inCube = "inCube",
-  outCube = "outCube",
-  inOutCube = "inOutCube",
-  inQuart = "inQuart",
-  outQuart = "outQuart",
-  inOutQuart = "inOutQuart",
-  inQuint = "inQuint",
-  outQuint = "outQuint",
-  inOutQuint = "inOutQuint",
-  inSine = "inSine",
-  outSine = "outSine",
-  inOutSine = "inOutSine",
-  inExpo = "inExpo",
-  outExpo = "outExpo",
-  inOutExpo = "inOutExpo",
-  inCirc = "inCirc",
-  outCirc = "outCirc",
-  inOutCirc = "inOutCirc",
-  inBack = "inBack",
-  outBack = "outBack",
-  inOutBack = "inOutBack",
-  inBounce = "inBounce",
-  outBounce = "outBounce",
-  inOutBounce = "inOutBounce"
+  linear = 'linear',
+  inQuad = 'inQuad',
+  outQuad = 'outQuad',
+  inOutQuad = 'inOutQuad',
+  inCube = 'inCube',
+  outCube = 'outCube',
+  inOutCube = 'inOutCube',
+  inQuart = 'inQuart',
+  outQuart = 'outQuart',
+  inOutQuart = 'inOutQuart',
+  inQuint = 'inQuint',
+  outQuint = 'outQuint',
+  inOutQuint = 'inOutQuint',
+  inSine = 'inSine',
+  outSine = 'outSine',
+  inOutSine = 'inOutSine',
+  inExpo = 'inExpo',
+  outExpo = 'outExpo',
+  inOutExpo = 'inOutExpo',
+  inCirc = 'inCirc',
+  outCirc = 'outCirc',
+  inOutCirc = 'inOutCirc',
+  inBack = 'inBack',
+  outBack = 'outBack',
+  inOutBack = 'inOutBack',
+  inBounce = 'inBounce',
+  outBounce = 'outBounce',
+  inOutBounce = 'inOutBounce',
 }
 
 export enum EYE_TYPE {
-  LOOKING_AT_FACE = "lookingAtFace",
-  NOT_LOOKING = "notLooking",
-  BLINKING = "blinking",
-  WINKING = "winking"
+  LOOKING_AT_FACE = 'lookingAtFace',
+  NOT_LOOKING = 'notLooking',
+  BLINKING = 'blinking',
+  WINKING = 'winking',
 }
 
 export enum BEHAVIOUR_STATE {
-  AT_TARGET = "target",
-  AROUND_RANDOMLY = "random",
-  SLEEP = "sleep"
+  AT_TARGET = 'target',
+  AROUND_RANDOMLY = 'random',
+  SLEEP = 'sleep',
 }
 
 // Worker messages

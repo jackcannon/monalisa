@@ -1,11 +1,11 @@
-import { Subject } from "rxjs";
-import { first } from "rxjs/operators";
+import { Subject } from 'rxjs';
+import { first } from 'rxjs/operators';
 
 export const createTimer = name => {
   const start = Date.now();
   let last = Date.now();
 
-  return function(...args) {
+  return function (...args) {
     const now = Date.now();
     const diff = now - last;
     last = now;
@@ -23,10 +23,9 @@ export const toFixed = (num, decimalPlaces = 3) =>
   Math.round(num * Math.pow(10, decimalPlaces)) / Math.pow(10, decimalPlaces);
 
 export const padLeft = (num: number, places: number = 3) =>
-  (Math.pow(10, places) + "" + num).substr(-places);
+  (Math.pow(10, places) + '' + num).substr(-places);
 
-export const formatTime = (ms: number) =>
-  new Date(ms).toISOString().substr(11, 12);
+export const formatTime = (ms: number) => new Date(ms).toISOString().substr(11, 12);
 
 export const distanceBetweenPoints = (pointA, pointB): number => {
   const distanceX = Math.abs(pointA.x - pointB.x);
@@ -52,44 +51,44 @@ export const blessedStyleText = (text: string, fg?: string, bg?: string) => {
 
 export const formatAsciiNumbers = (str: string): string[] => {
   const chars = {
-    "0": ["  ███  ", "██   ██", "██   ██", "██   ██", "  ███  "],
-    "1": ["   ██  ", "  ███  ", "   ██  ", "   ██  ", "███████"],
-    "2": ["  ███  ", "██   ██", "    ███", "  ██   ", "███████"],
-    "3": ["  ███  ", "██   ██", "    ██ ", "██   ██", "  ███  "],
-    "4": ["██  ██ ", "██  ██ ", "███████", "    ██ ", "    ██ "],
-    "5": ["███████", "██     ", "██████ ", "     ██", "██████ "],
-    "6": ["  ████ ", "██     ", "██████ ", "██   ██", "  ████ "],
-    "7": ["███████", "    ██ ", "  ██   ", " ██    ", "██     "],
-    "8": [" █████ ", "██   ██", " █████ ", "██   ██", " █████ "],
-    "9": ["  ████ ", "██   ██", " ██████", "     ██", "  ████ "],
-    ":": ["  ██  ", "  ██  ", "      ", "  ██  ", "  ██  "],
-    ".": ["      ", "      ", "      ", "  ██  ", "  ██  "]
+    '0': ['  ███  ', '██   ██', '██   ██', '██   ██', '  ███  '],
+    '1': ['   ██  ', '  ███  ', '   ██  ', '   ██  ', '███████'],
+    '2': ['  ███  ', '██   ██', '    ███', '  ██   ', '███████'],
+    '3': ['  ███  ', '██   ██', '    ██ ', '██   ██', '  ███  '],
+    '4': ['██  ██ ', '██  ██ ', '███████', '    ██ ', '    ██ '],
+    '5': ['███████', '██     ', '██████ ', '     ██', '██████ '],
+    '6': ['  ████ ', '██     ', '██████ ', '██   ██', '  ████ '],
+    '7': ['███████', '    ██ ', '  ██   ', ' ██    ', '██     '],
+    '8': [' █████ ', '██   ██', ' █████ ', '██   ██', ' █████ '],
+    '9': ['  ████ ', '██   ██', ' ██████', '     ██', '  ████ '],
+    ':': ['  ██  ', '  ██  ', '      ', '  ██  ', '  ██  '],
+    '.': ['      ', '      ', '      ', '  ██  ', '  ██  '],
   };
 
   return [0, 1, 2, 3, 4].map(row =>
     str
-      .split("")
+      .split('')
       .map(char => chars[char][row])
-      .join("  ")
+      .join('  '),
   );
 };
 
 // Used to generate symbol lists for faceMapBox display
-export const getSymbolsFromAscii = (ascii: string[], empty = " ") => {
+export const getSymbolsFromAscii = (ascii: string[], empty = ' ') => {
   let centre = { x: 0, y: 0 };
   let symbols = [];
   ascii.forEach((row, y) =>
-    row.split("").forEach((char, x) => {
-      if (char === "X") {
+    row.split('').forEach((char, x) => {
+      if (char === 'X') {
         centre = { x, y };
       } else if (char !== empty) {
         symbols.push({ x, y, char });
       }
-    })
+    }),
   );
   return symbols.map(({ x, y, char }) => ({
     x: x - centre.x,
     y: y - centre.y,
-    char
+    char,
   }));
 };

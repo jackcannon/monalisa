@@ -1,10 +1,4 @@
-import {
-  DETECTION_TYPE,
-  OLED_COLOR,
-  MOVE_TYPE,
-  EASE_TYPE,
-  MOVEMENT_TYPE
-} from "./interfaces";
+import { DETECTION_TYPE, OLED_COLOR, MOVE_TYPE, EASE_TYPE, MOVEMENT_TYPE } from './interfaces';
 
 // ----------------------------
 //
@@ -54,8 +48,8 @@ export const cameraOptions = {
   width: photoWidth,
   height: photoWidth * photoRatio,
   fps: 20,
-  encoding: "JPEG",
-  quality: 95
+  encoding: 'JPEG',
+  quality: 95,
 };
 
 export const faceApiConfig = {
@@ -69,7 +63,7 @@ export const faceApiConfig = {
   // minFaceSize: photoWidth * 0.15,
   // minFaceSize: photoWidth * 0.175,
   // minFaceSize: photoWidth * 0.2,
-  minFaceSize: photoWidth * 0.225
+  minFaceSize: photoWidth * 0.225,
   // minFaceSize: photoWidth * 0.25,
   // minFaceSize: photoWidth * 0.275,
   // minFaceSize: photoWidth * 0.3,
@@ -77,7 +71,7 @@ export const faceApiConfig = {
 
 export const opencvConfig = {
   // dataName: "haarcascade_frontalface_alt_tree"
-  dataName: "haarcascade_frontalface_alt"
+  dataName: 'haarcascade_frontalface_alt',
   // dataName: "haarcascade_frontalface_alt2"
   // dataName: "haarcascade_frontalface_default"
   // dataName: 'haarcascade_frontalface_profileface',
@@ -100,18 +94,18 @@ export let oledForeColor = OLED_COLOR.BLACK;
 // Speed. Higher = slower
 export const moveSpeed = {
   [MOVEMENT_TYPE.FACE]: 25,
-  [MOVEMENT_TYPE.RANDOM]: 60
+  [MOVEMENT_TYPE.RANDOM]: 60,
 };
 
 // method to move to look at subject (LOOK, EASE)
 export const moveType = {
   [MOVEMENT_TYPE.FACE]: MOVE_TYPE.EASE,
-  [MOVEMENT_TYPE.RANDOM]: MOVE_TYPE.EASE
+  [MOVEMENT_TYPE.RANDOM]: MOVE_TYPE.EASE,
 };
 
 export const easeType = {
   [MOVEMENT_TYPE.FACE]: EASE_TYPE.inQuad,
-  [MOVEMENT_TYPE.RANDOM]: EASE_TYPE.inOutQuad
+  [MOVEMENT_TYPE.RANDOM]: EASE_TYPE.inOutQuad,
 };
 
 // Don't blink if moving more distance than this

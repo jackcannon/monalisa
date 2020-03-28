@@ -1,13 +1,13 @@
-import { fork } from "child_process";
-import { showDashboard } from "./config";
-import { IFaceRecord, IFace } from "./interfaces";
+import { fork } from 'child_process';
+import { showDashboard } from './config';
+import { IFaceRecord, IFace } from './interfaces';
 import {
   IChildProcessMessage,
   IDashboardSetup,
   IDashboardLog,
   IDashboardRecord,
-  IDashboardFaces
-} from "./dashboardTypes";
+  IDashboardFaces,
+} from './dashboardTypes';
 
 let log = { log: console.log };
 let childProcess;
@@ -18,8 +18,8 @@ const handleIncomingMessage = (msg: IChildProcessMessage) => {};
 
 export const onChildKilled = () =>
   new Promise(resolve => {
-    childProcess.once("exit", resolve);
-    childProcess.once("close", resolve);
+    childProcess.once('exit', resolve);
+    childProcess.once('close', resolve);
   });
 
 export const shutdown = async () => {
@@ -32,18 +32,18 @@ export const shutdown = async () => {
 
 export const setup = start => {
   if (showDashboard) {
-    childProcess = fork(__dirname + "/dashboard-child.js");
-    childProcess.on("message", msg => handleIncomingMessage(msg));
+    childProcess = fork(__dirname + '/dashboard-child.js');
+    childProcess.on('message', msg => handleIncomingMessage(msg));
     log.log = (...args) => {
       childProcess.send({
-        type: "log",
-        data: args
+        type: 'log',
+        data: args,
       } as IDashboardLog);
     };
 
     childProcess.send({
-      type: "setup",
-      startTime: start
+      type: 'setup',
+      startTime: start,
     } as IDashboardSetup);
   }
 };
@@ -52,22 +52,22 @@ export const setup = start => {
 export const addRecord = (points: IFaceRecord[], delta: number) => {
   if (showDashboard && childProcess) {
     childProcess.send({
-      type: "record",
+      type: 'record',
       points,
-      delta
+      delta,
     } as IDashboardRecord);
   } else {
-    const buffer = " ".repeat(4 - delta.toString().length);
-    log.log("Delta:", buffer, delta, "  Faces:", JSON.stringify(points));
+    const buffer = ' '.repeat(4 - delta.toString().length);
+    log.log('Delta:', buffer, delta, '  Faces:', JSON.stringify(points));
   }
 };
 export const updatesFaces = (faces: IFace[], target: IFace) => {
   if (showDashboard && childProcess) {
     childProcess.send({
-      type: "faces",
+      type: 'faces',
       faces,
       target,
-      time: Date.now()
+      time: Date.now(),
     } as IDashboardFaces);
   } else {
     // const buffer = " ".repeat(4 - delta.toString().length);

@@ -1,17 +1,15 @@
-import cv from "opencv";
-import { BehaviorSubject } from "rxjs";
+import cv from 'opencv';
+import { BehaviorSubject } from 'rxjs';
 
-import { IFaceRecord } from "./interfaces";
-import { toFixed, getPromise } from "./utils";
-import { cameraOptions, savePhotoOnDetection, opencvConfig } from "./config";
-import { getFrames } from "./cameraHelper";
-import { log } from "./dashboard";
+import { IFaceRecord } from './interfaces';
+import { toFixed, getPromise } from './utils';
+import { cameraOptions, savePhotoOnDetection, opencvConfig } from './config';
+import { getFrames } from './cameraHelper';
+import { log } from './dashboard';
 
 const dataPath = `./src/opencv/${opencvConfig.dataName}.xml`;
 
-let recordsSubject: BehaviorSubject<IFaceRecord[]> = new BehaviorSubject<
-  IFaceRecord[]
->(null);
+let recordsSubject: BehaviorSubject<IFaceRecord[]> = new BehaviorSubject<IFaceRecord[]>(null);
 let framesSubject: BehaviorSubject<Buffer> = null;
 let detectCount: number = 0;
 
@@ -22,9 +20,7 @@ interface ICVBox {
   height: number;
 }
 
-export const startDetection = async (): Promise<BehaviorSubject<
-  IFaceRecord[]
->> => {
+export const startDetection = async (): Promise<BehaviorSubject<IFaceRecord[]>> => {
   framesSubject = await getFrames();
   startProcessing();
   await getPromise(recordsSubject);
@@ -45,9 +41,7 @@ const cvReadImage = imgBuffer =>
 
 const cvDetectFaces = (im): Promise<ICVBox[]> =>
   new Promise((resolve, reject) => {
-    im.detectObject(dataPath, {}, (err, faces) =>
-      err ? reject(err) : resolve(faces)
-    );
+    im.detectObject(dataPath, {}, (err, faces) => (err ? reject(err) : resolve(faces)));
   });
 
 const detect = async (imgBuffer): Promise<IFaceRecord[]> => {
@@ -64,25 +58,20 @@ const boxToPoint = (time: number) => (box: ICVBox): IFaceRecord => ({
   x: toFixed((box.x + box.width * 0.5) / cameraOptions.width, 6),
   y: toFixed((box.y + box.height * 0.5) / cameraOptions.height, 6),
   score: 1,
-  time
+  time,
 });
 
 const saveOutput = async (im, faces) => {
   for (var i = 0; i < faces.length; i++) {
     var face = faces[i];
-    im.ellipse(
-      face.x + face.width / 2,
-      face.y + face.height / 2,
-      face.width / 2,
-      face.height / 2
-    );
+    im.ellipse(face.x + face.width / 2, face.y + face.height / 2, face.width / 2, face.height / 2);
   }
   const now = new Date()
     .toISOString()
-    .replace(/T|:|\./g, "-")
+    .replace(/T|:|\./g, '-')
     .substring(0, 19);
   const outputName = `photos/${now}.png`;
 
   im.save(outputName);
-  log.log("Image saved to " + outputName);
+  log.log('Image saved to ' + outputName);
 };

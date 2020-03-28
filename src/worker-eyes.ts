@@ -1,21 +1,21 @@
-import { parentPort } from "worker_threads";
-import { IEyeConfig } from "./interfaces";
-import { OLED_LAYER } from "./interfaces";
+import { parentPort } from 'worker_threads';
+import { IEyeConfig } from './interfaces';
+import { OLED_LAYER } from './interfaces';
 
 // type OLED_LAYER = string;
 
-parentPort.on("message", msg => {
+parentPort.on('message', msg => {
   switch (msg.type) {
-    case "setup":
+    case 'setup':
       setup();
       break;
-    case "reset":
+    case 'reset':
       reset();
       break;
-    case "start":
+    case 'start':
       start();
       break;
-    case "drawFrame":
+    case 'drawFrame':
       drawFrame(msg.eyes, msg.waiting);
       break;
   }
@@ -25,7 +25,7 @@ export const setup = () => {
   screen = getFreshScreen();
   previousScreen = getFreshScreen();
   // start();
-  parentPort.postMessage({ type: "setup-complete" });
+  parentPort.postMessage({ type: 'setup-complete' });
 };
 
 export const reset = () => {
@@ -83,7 +83,7 @@ const getCirclePixels = (x0, y0, r, color: OLED_LAYER) => {
     [x0, y0 + r, color],
     [x0, y0 - r, color],
     [x0 + r, y0, color],
-    [x0 - r, y0, color]
+    [x0 - r, y0, color],
   ];
 
   while (x < y) {
@@ -105,33 +105,22 @@ const getCirclePixels = (x0, y0, r, color: OLED_LAYER) => {
         [x0 + y, y0 + x, color],
         [x0 - y, y0 + x, color],
         [x0 + y, y0 - x, color],
-        [x0 - y, y0 - x, color]
-      ]
+        [x0 - y, y0 - x, color],
+      ],
     );
   }
   return output;
 };
 
-const getEllipsePixels = (
-  x0,
-  y0,
-  width,
-  height,
-  color: OLED_LAYER,
-  progression = 6
-) => {
+const getEllipsePixels = (x0, y0, width, height, color: OLED_LAYER, progression = 6) => {
   const pixels = [];
   let xlast = -1;
   let ylast = -1;
   let ellipseX;
   let ellipseY;
   for (var angle = 0; angle <= 720; angle += progression) {
-    ellipseX = Math.floor(
-      x0 + width * Math.cos(angle * 2 * (Math.PI / 720)) + 0.5
-    );
-    ellipseY = Math.floor(
-      y0 + height * Math.sin(angle * 2 * (Math.PI / 720)) + 0.5
-    );
+    ellipseX = Math.floor(x0 + width * Math.cos(angle * 2 * (Math.PI / 720)) + 0.5);
+    ellipseY = Math.floor(y0 + height * Math.sin(angle * 2 * (Math.PI / 720)) + 0.5);
     if (xlast != ellipseX || ylast != ellipseY) {
       xlast = ellipseX;
       ylast = ellipseY;
@@ -158,33 +147,18 @@ const fill = (outline, color: OLED_LAYER) => {
   const lines = getHorizonalLinesOfCircle(outline);
   const pixels = outline.concat(
     lines
-      .map(line =>
-        getLinePixels(line[0][0], line[0][1], line[1][0], line[1][1], color)
-      )
-      .reduce((acc, b) => acc.concat(b))
+      .map(line => getLinePixels(line[0][0], line[0][1], line[1][0], line[1][1], color))
+      .reduce((acc, b) => acc.concat(b)),
   );
   addPixels(pixels);
 };
 
-const fillShading = (
-  arrOfLines,
-  shadingAmount = 2,
-  inverseDirection = false,
-  offset = 0
-) => {
+const fillShading = (arrOfLines, shadingAmount = 2, inverseDirection = false, offset = 0) => {
   const pixels = arrOfLines
     .map(line => {
-      const row = getLinePixels(
-        line[0][0],
-        line[0][1],
-        line[1][0],
-        line[1][1],
-        OLED_LAYER.BACK
-      );
+      const row = getLinePixels(line[0][0], line[0][1], line[1][0], line[1][1], OLED_LAYER.BACK);
       row.forEach(pixel => {
-        const combined = inverseDirection
-          ? -pixel[0] + pixel[1]
-          : pixel[0] + pixel[1];
+        const combined = inverseDirection ? -pixel[0] + pixel[1] : pixel[0] + pixel[1];
         pixel[2] = Number((combined + offset) % shadingAmount === 0);
       });
       return row;
@@ -217,16 +191,14 @@ const getHorizonalLinesOfCircle = circle => {
     .map(row => row.sort((a, b) => a[0] - b[0]));
 
   return rows.map(row => {
-    const centre = Math.round(
-      row.reduce((acc, pixel) => acc + pixel[0], 0) / row.length
-    );
+    const centre = Math.round(row.reduce((acc, pixel) => acc + pixel[0], 0) / row.length);
     const limit = [
       row.filter(pixel => pixel[0] < centre).reverse()[0],
-      row.filter(pixel => pixel[0] > centre)[0]
+      row.filter(pixel => pixel[0] > centre)[0],
     ];
     return [
       [limit[0][0] + 1, limit[0][1], limit[0][3]],
-      [limit[1][0] - 1, limit[1][1], limit[1][3]]
+      [limit[1][0] - 1, limit[1][1], limit[1][3]],
     ];
   });
 };
@@ -245,19 +217,12 @@ const drawEyes = (eyes: IEyeConfig[], waiting: boolean = false) => {
   const eyeOffset = Math.round(distance / 2) + width;
   const eyePositions = [
     { x: midpoint[0] - eyeOffset, y: midpoint[1] },
-    { x: midpoint[0] + eyeOffset, y: midpoint[1] }
+    { x: midpoint[0] + eyeOffset, y: midpoint[1] },
   ];
 
   eyes.forEach((eye: IEyeConfig, eyeIndex: number) => {
     const eyePos = eyePositions[eyeIndex];
-    const outer = getEllipsePixels(
-      eyePos.x,
-      eyePos.y,
-      width,
-      height,
-      OLED_LAYER.FORE,
-      4
-    );
+    const outer = getEllipsePixels(eyePos.x, eyePos.y, width, height, OLED_LAYER.FORE, 4);
     const horLines = getHorizonalLinesOfCircle(outer);
 
     // outer line
@@ -281,20 +246,8 @@ const drawEyes = (eyes: IEyeConfig[], waiting: boolean = false) => {
       const topWaitOutline = [
         ...getLinePixels(leftX, topY, leftX, topY + 2, OLED_LAYER.FORE),
         ...getLinePixels(rightX, topY, rightX, topY + 2, OLED_LAYER.FORE),
-        ...getLinePixels(
-          leftX,
-          topY + 2,
-          pupilPosX,
-          pupilPosY,
-          OLED_LAYER.FORE
-        ),
-        ...getLinePixels(
-          rightX,
-          topY + 2,
-          pupilPosX,
-          pupilPosY,
-          OLED_LAYER.FORE
-        )
+        ...getLinePixels(leftX, topY + 2, pupilPosX, pupilPosY, OLED_LAYER.FORE),
+        ...getLinePixels(rightX, topY + 2, pupilPosX, pupilPosY, OLED_LAYER.FORE),
       ];
       addPixels(topWaitOutline);
       fillShading(getHorizonalLinesOfCircle(topWaitOutline), 2, !eyeIndex);
@@ -307,51 +260,25 @@ const drawEyes = (eyes: IEyeConfig[], waiting: boolean = false) => {
       const bottomWaitOutline = [
         ...getLinePixels(leftX, bottomY, leftX, bottomY - 2, OLED_LAYER.FORE),
         ...getLinePixels(rightX, bottomY, rightX, bottomY - 2, OLED_LAYER.FORE),
-        ...getLinePixels(
-          leftX,
-          bottomY - 2,
-          pupilPosX,
-          pupilPosY,
-          OLED_LAYER.FORE
-        ),
-        ...getLinePixels(
-          rightX,
-          bottomY - 2,
-          pupilPosX,
-          pupilPosY,
-          OLED_LAYER.FORE
-        )
+        ...getLinePixels(leftX, bottomY - 2, pupilPosX, pupilPosY, OLED_LAYER.FORE),
+        ...getLinePixels(rightX, bottomY - 2, pupilPosX, pupilPosY, OLED_LAYER.FORE),
       ];
       addPixels(bottomWaitOutline);
       const bottomShading = [
-        ...getLinePixels(
-          leftX + 1,
-          bottomY,
-          leftX + 1,
-          bottomY - 3,
-          OLED_LAYER.FORE
-        ),
-        ...getLinePixels(
-          rightX - 1,
-          bottomY,
-          rightX - 1,
-          bottomY - 3,
-          OLED_LAYER.FORE
-        )
+        ...getLinePixels(leftX + 1, bottomY, leftX + 1, bottomY - 3, OLED_LAYER.FORE),
+        ...getLinePixels(rightX - 1, bottomY, rightX - 1, bottomY - 3, OLED_LAYER.FORE),
       ];
       fillShading(getHorizonalLinesOfCircle(bottomShading), 2, !eyeIndex, 1);
     } else {
       // pupil
       const pupilPosX = eyePos.x + Math.round(eye.x * pupilMoveXDistance);
-      const pupilPosY =
-        Math.round(eyePos.y + width * 0.1) +
-        Math.round(eye.y * pupilMoveYDistance);
+      const pupilPosY = Math.round(eyePos.y + width * 0.1) + Math.round(eye.y * pupilMoveYDistance);
       // fillCircle(...pupilPos, Math.round(width * 0.2), 1);
       const pupilBorder = getCirclePixels(
         pupilPosX,
         pupilPosY,
         Math.round(width * 0.25),
-        OLED_LAYER.FORE
+        OLED_LAYER.FORE,
       );
       const pupilPixels = getHorizonalLinesOfCircle(pupilBorder);
       fillShading(pupilPixels, 5, !eyeIndex);
@@ -364,7 +291,7 @@ const drawEyes = (eyes: IEyeConfig[], waiting: boolean = false) => {
     // eyelids
     const lidLineIndex = Math.min(
       Math.round(horLines.length * (eye.eyelid / 100)),
-      horLines.length - 1
+      horLines.length - 1,
     );
     const lidLine = horLines[lidLineIndex];
     const lidLines = horLines.slice(0, lidLineIndex);
@@ -380,7 +307,7 @@ const drawEyes = (eyes: IEyeConfig[], waiting: boolean = false) => {
         width * 1.2,
         height,
         OLED_LAYER.FORE,
-        4
+        4,
       );
       addPixels(cheekOutline);
       fill(cheekOutline, 0);
@@ -395,7 +322,7 @@ const drawEyes = (eyes: IEyeConfig[], waiting: boolean = false) => {
         width * 1.35,
         height,
         OLED_LAYER.FORE,
-        4
+        4,
       );
       addPixels(browOutline);
       fill(browOutline, OLED_LAYER.BACK);
@@ -414,9 +341,7 @@ const areEyesDifferent = (a: IEyeConfig[], b: IEyeConfig[]) => {
   return (
     a.filter((eyeA, i) => {
       let eyeB = b[i];
-      return (
-        Object.keys(eyeA).filter(key => eyeA[key] !== eyeB[key]).length !== 0
-      );
+      return Object.keys(eyeA).filter(key => eyeA[key] !== eyeB[key]).length !== 0;
     }).length !== 0
   );
 };
@@ -435,7 +360,7 @@ const getDefaultEye = (overwrite: IEyeConfig = {}): IEyeConfig => ({
   eyelid: 25,
   brow: false,
   cheek: false,
-  ...overwrite
+  ...overwrite,
 });
 
 // Pixel management
@@ -459,8 +384,8 @@ const updateChangedPixels = (): boolean => {
 
   if (hasAnythingChanged) {
     parentPort.postMessage({
-      type: "changedPixels",
-      changed
+      type: 'changedPixels',
+      changed,
     });
   }
 
@@ -471,18 +396,16 @@ const updateChangedPixels = (): boolean => {
 };
 
 const addPixels = newPixels => {
-  const filtered = newPixels.filter(
-    ([x, y]) => x >= 0 && x < 128 && y >= 0 && y < 64
-  );
+  const filtered = newPixels.filter(([x, y]) => x >= 0 && x < 128 && y >= 0 && y < 64);
   // console.log('adding', filtered.length, 'pixels');
   filtered.forEach(([x, y, color]) => (screen[x][y] = color));
 };
 
 const printScreen = screen => {
   for (let x = 0; x < 128; x++) {
-    let str = "";
+    let str = '';
     for (let y = 0; y < 64; y++) {
-      str += "" + screen[x][y];
+      str += '' + screen[x][y];
     }
     // console.log(str);
   }
@@ -503,15 +426,12 @@ export const start = () => {
 
 export const drawFrame = (
   eyes: IEyeConfig[] = [getDefaultEye(), getDefaultEye()],
-  waiting: boolean = false
+  waiting: boolean = false,
 ) => {
   const now = Date.now();
 
   eyes = eyes.map(makeEyeSafe);
-  if (
-    (waiting || areEyesDifferent(previousEyes, eyes)) &&
-    now - lastChanged > 1000
-  ) {
+  if ((waiting || areEyesDifferent(previousEyes, eyes)) && now - lastChanged > 1000) {
     // Set the pixels
     clearDisplay();
     drawEyes(eyes, waiting);
@@ -530,4 +450,4 @@ export const drawFrame = (
   loop++;
 };
 
-parentPort.postMessage({ type: "init" });
+parentPort.postMessage({ type: 'init' });
