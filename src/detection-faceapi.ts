@@ -21,7 +21,7 @@ import { toFixed, getPromise } from "./utils";
 import { cameraOptions, savePhotoOnDetection, faceApiConfig } from "./config";
 import { getFrames } from "./cameraHelper";
 
-let pointsSubject: BehaviorSubject<IFacePoint[]> = new BehaviorSubject<
+let recordsSubject: BehaviorSubject<IFacePoint[]> = new BehaviorSubject<
   IFacePoint[]
 >(null);
 let framesSubject: BehaviorSubject<Buffer> = null;
@@ -49,8 +49,8 @@ export const startDetection = async (): Promise<BehaviorSubject<
     queue = frame;
   });
   startProcessing();
-  await getPromise(pointsSubject);
-  return pointsSubject;
+  await getPromise(recordsSubject);
+  return recordsSubject;
 };
 
 export const startProcessing = async () => {
@@ -58,7 +58,7 @@ export const startProcessing = async () => {
   queue = null;
   const points = await detect(frame);
   detectCount++;
-  pointsSubject.next(points);
+  recordsSubject.next(points);
   if (!queue) {
     await framesSubject
       .pipe(first(latestFrame => latestFrame && latestFrame !== frame))

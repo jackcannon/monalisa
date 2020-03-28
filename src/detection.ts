@@ -15,7 +15,7 @@ if (detectionType === DETECTION_TYPE.FACEAPI && !useWorker) {
 }
 import { startDetection as startWorker } from "./detection-worker";
 
-let pointsSubject: BehaviorSubject<IFaceRecord[]> = null;
+let recordsSubject: BehaviorSubject<IFaceRecord[]> = null;
 
 const getDetectionStart = (): Function => {
   if (useWorker) {
@@ -29,15 +29,15 @@ const getDetectionStart = (): Function => {
 };
 
 export const setup = async (): Promise<BehaviorSubject<IFaceRecord[]>> => {
-  pointsSubject = await getDetectionStart()();
+  recordsSubject = await getDetectionStart()();
   startListening();
 
-  return pointsSubject;
+  return recordsSubject;
 };
 
 const startListening = () => {
   const timer = createTimer("points");
-  pointsSubject.pipe(filter(points => !!points)).subscribe(points => {
+  recordsSubject.pipe(filter(points => !!points)).subscribe(points => {
     const delta = timer();
 
     const displayPoints = points.map(

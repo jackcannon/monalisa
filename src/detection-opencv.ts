@@ -9,7 +9,7 @@ import { log } from "./dashboard";
 
 const dataPath = `./src/opencv/${opencvConfig.dataName}.xml`;
 
-let pointsSubject: BehaviorSubject<IFaceRecord[]> = new BehaviorSubject<
+let recordsSubject: BehaviorSubject<IFaceRecord[]> = new BehaviorSubject<
   IFaceRecord[]
 >(null);
 let framesSubject: BehaviorSubject<Buffer> = null;
@@ -27,14 +27,14 @@ export const startDetection = async (): Promise<BehaviorSubject<
 >> => {
   framesSubject = await getFrames();
   startProcessing();
-  await getPromise(pointsSubject);
-  return pointsSubject;
+  await getPromise(recordsSubject);
+  return recordsSubject;
 };
 
 export const startProcessing = async () => {
   const points = await detect(framesSubject.value);
   detectCount++;
-  pointsSubject.next(points);
+  recordsSubject.next(points);
   startProcessing();
 };
 

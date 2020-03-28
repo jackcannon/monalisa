@@ -19,7 +19,8 @@ import {
 import {
   IDashboardSetup,
   IDashboardLog,
-  IDashboardRecord
+  IDashboardRecord,
+  IDashboardFaces
 } from "./dashboardTypes";
 import { MOVEMENT_TYPE } from "./interfaces";
 
@@ -68,6 +69,9 @@ const handleIncomingMessage = msg => {
       break;
     case "record":
       addRecord(msg);
+      break;
+    case "faces":
+      updateFaces(msg);
       break;
   }
 };
@@ -310,9 +314,18 @@ const addRecord = ({ points, delta }: IDashboardRecord) => {
   );
   faceNumLine.setData(formatFaceNumData(faceRecords, totalRecordCount));
   updateFaceBoxes(points, totalRecordCount);
-  updateFaceMapBox(points, totalRecordCount);
+  // updateFaceMapBox(points, totalRecordCount);
 
-  scrn.render();
+  // scrn.render();
+};
+
+const updateFaces = ({ faces, target, time }: IDashboardFaces) => {
+  // debug("face time to send:", time, Date.now() - time);
+  faceMapBox.setLabel("" + (Date.now() - time));
+  const records = faces.map(face => face.point);
+  updateFaceMapBox(records, 1);
+
+  // scrn.render();
 };
 
 // RUN

@@ -11,6 +11,14 @@ export interface IFaceRecord extends IFacePoint {
   time: number;
 }
 
+export interface IFace {
+  point: IFaceRecord; // last known location
+  historicalPoints: IFaceRecord[];
+  isTarget: boolean;
+  firstSeen: number;
+  lastSeen: number;
+}
+
 export interface ILookedAt {
   face: IFaceRecord;
   firstSeen: number;
@@ -82,6 +90,19 @@ export enum EASE_TYPE {
   inBounce = "inBounce",
   outBounce = "outBounce",
   inOutBounce = "inOutBounce"
+}
+
+export enum EYE_TYPE {
+  LOOKING_AT_FACE = "lookingAtFace",
+  NOT_LOOKING = "notLooking",
+  BLINKING = "blinking",
+  WINKING = "winking"
+}
+
+export enum BEHAVIOUR_STATE {
+  AT_TARGET = "target",
+  AROUND_RANDOMLY = "random",
+  SLEEP = "sleep"
 }
 
 // Worker messages

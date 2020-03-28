@@ -1,9 +1,9 @@
-import { IFaceRecord, ILookedAt, IPoint, MOVEMENT_TYPE } from "./interfaces";
-import * as movement from "./movement";
-import * as eyes from "./eyes";
-import { BehaviorSubject } from "rxjs";
-import { first, filter } from "rxjs/operators";
-import { distanceBetweenPoints, delay, toFixed, randomID } from "./utils";
+import { IFaceRecord, ILookedAt, IPoint, MOVEMENT_TYPE, EYE_TYPE } from './interfaces';
+import * as movement from './movement';
+import * as eyes from './eyes';
+import { BehaviorSubject } from 'rxjs';
+import { first, filter } from 'rxjs/operators';
+import { distanceBetweenPoints, delay, toFixed, randomID } from './utils';
 import {
   dontBlinkDistanceThreshold,
   durationLookingAtEachFace,
@@ -11,17 +11,11 @@ import {
   lookRandomlyAtSomethingDurationBase,
   lookRandomlyAtSomethingDurationRandom,
   randomBlinking
-} from "./config";
-import { log } from "./dashboard";
+} from './config';
+import { log, updatesFaces } from './dashboard';
+import { faceModel } from './faceModel';
 
-enum EYE_TYPE {
-  LOOKING_AT_FACE = "lookingAtFace",
-  NOT_LOOKING = "notLooking",
-  BLINKING = "blinking",
-  WINKING = "winking"
-}
-
-let facesSubject: BehaviorSubject<IFaceRecord[]>;
+let recordsSubject: BehaviorSubject<IFaceRecord[]>;
 let count = 0;
 let lastLookedAt: ILookedAt = {
   face: null,
@@ -33,21 +27,16 @@ let lastLookedAt: ILookedAt = {
 let lookingAroundRandomly: number = null;
 
 export const setup = (subject: BehaviorSubject<IFaceRecord[]>) => {
-  facesSubject = subject;
+  recordsSubject = subject;
 
-  facesSubject
-    .pipe(filter(faces => !!faces))
-    .subscribe((faces: IFaceRecord[]) => onFaces(faces));
+  recordsSubject.pipe(filter(faces => !!faces)).subscribe((faces: IFaceRecord[]) => onFaces(faces));
 
-  facesSubject.pipe(first()).subscribe(() => {
+  recordsSubject.pipe(first()).subscribe(() => {
     eyes.drawFrame();
   });
 };
 
-export const drawEyes = (
-  type: EYE_TYPE,
-  eyeDirection: IPoint = { x: 0.5, y: 0.5 }
-) => {
+export const drawEyes = (type: EYE_TYPE, eyeDirection: IPoint = { x: 0.5, y: 0.5 }) => {
   eyeDirection = {
     x: toFixed((eyeDirection.x * 2 - 1) * 0.8 * -1, 4),
     y: toFixed((eyeDirection.y * 2 - 1) * 0.8 + 0.1, 4)
@@ -95,11 +84,7 @@ export const resetLookedAt = () => {
   lastLookedAt.otherFaces = [];
 };
 
-export const updateLookedAt = (
-  pick: IFaceRecord,
-  faces?: IFaceRecord[],
-  sameFace?: boolean
-) => {
+export const updateLookedAt = (pick: IFaceRecord, faces?: IFaceRecord[], sameFace?: boolean) => {
   if (!pick) {
     lastLookedAt.face = null;
     lastLookedAt.count += 1;
@@ -127,20 +112,14 @@ export const updateLookedAt = (
 // Determine which of the current faces is most likely to be the last looked at
 const getLastLookedByDistances = (faces: IFaceRecord[]): IFaceRecord[] => {
   if (!lastLookedAt.face) return faces;
-  const distances = faces.map(face =>
-    distanceBetweenPoints(lastLookedAt.face, face)
-  );
-  const sorted = faces.sort(
-    (a, b) => distances[faces.indexOf(a)] - distances[faces.indexOf(b)]
-  );
+  const distances = faces.map(face => distanceBetweenPoints(lastLookedAt.face, face));
+  const sorted = faces.sort((a, b) => distances[faces.indexOf(a)] - distances[faces.indexOf(b)]);
   return sorted;
 };
 
 export const lookAt = (pick: IFaceRecord) => {
   const distance = movement.getDistance(pick);
-  movement
-    .toRelativeDegrees(pick, MOVEMENT_TYPE.FACE)
-    .then(() => eyesAfterLook(distance));
+  movement.toRelativeDegrees(pick, MOVEMENT_TYPE.FACE).then(() => eyesAfterLook(distance));
 };
 
 export const lookAroundRandomly = (): Promise<IPoint> => {
@@ -182,6 +161,12 @@ const eyesAfterLook = distance => {
 };
 
 export const onFaces = (faces: IFaceRecord[]) => {
+  // new stuff
+  faceModel.updateFaces(faces);
+  const faceData = faceModel.toData();
+  updatesFaces(faceData.faces, faceData.target);
+
+  // old stuff
   if (faces.length > 0) {
     onSeeingFaces(faces);
     lookingAroundRandomly = null;
@@ -191,7 +176,7 @@ export const onFaces = (faces: IFaceRecord[]) => {
     Date.now() - lastLookedAt.lastSeen > durationBeforeForgettingFace
   ) {
     resetLookedAt();
-    log.log("forgotten you");
+    log.log('forgotten you');
   } else if (!lastLookedAt.face) {
     updateLookedAt(null);
   }
@@ -200,9 +185,7 @@ export const onFaces = (faces: IFaceRecord[]) => {
   } else {
     // not seen anyone for a while
     if (!lookingAroundRandomly) {
-      lookAroundRandomly().then(direction =>
-        drawEyes(EYE_TYPE.NOT_LOOKING, direction)
-      );
+      lookAroundRandomly().then(direction => drawEyes(EYE_TYPE.NOT_LOOKING, direction));
     } else {
       drawEyes(EYE_TYPE.NOT_LOOKING);
     }
@@ -222,10 +205,7 @@ const onSeeingFaces = (faces: IFaceRecord[]) => {
 
     const timeSince = Date.now();
 
-    if (
-      lastLookedAt.face &&
-      Date.now() - lastLookedAt.firstSeen > durationLookingAtEachFace
-    ) {
+    if (lastLookedAt.face && Date.now() - lastLookedAt.firstSeen > durationLookingAtEachFace) {
       const otherFaces = lastLookedByDistances.slice(1);
       pick = otherFaces[Math.floor(Math.random() * otherFaces.length)];
       wasPickLastLookedAt = false;

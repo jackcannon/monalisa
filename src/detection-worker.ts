@@ -14,7 +14,7 @@ const workerPaths = {
 let worker;
 let workerMsgs: BehaviorSubject<any> = new BehaviorSubject<any>(null);
 
-let pointsSubject: BehaviorSubject<IFaceRecord[]> = new BehaviorSubject<
+let recordsSubject: BehaviorSubject<IFaceRecord[]> = new BehaviorSubject<
   IFaceRecord[]
 >(null);
 let framesSubject: BehaviorSubject<Buffer> = null;
@@ -26,8 +26,8 @@ export const startDetection = async (
   await createWorker(workerType);
   startProcessing();
   runProcess();
-  await getPromise(pointsSubject);
-  return pointsSubject;
+  await getPromise(recordsSubject);
+  return recordsSubject;
 };
 
 const createWorker = (workerType: DETECTION_TYPE): Promise<any> => {
@@ -55,6 +55,6 @@ const startProcessing = () => {
     .pipe(filter(msg => msg && msg.type === "points"))
     .subscribe(({ points }) => {
       runProcess();
-      pointsSubject.next(points);
+      recordsSubject.next(points);
     });
 };

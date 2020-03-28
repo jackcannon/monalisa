@@ -1,11 +1,12 @@
 import { fork } from "child_process";
 import { showDashboard } from "./config";
-import { IFaceRecord } from "./interfaces";
+import { IFaceRecord, IFace } from "./interfaces";
 import {
   IChildProcessMessage,
   IDashboardSetup,
   IDashboardLog,
-  IDashboardRecord
+  IDashboardRecord,
+  IDashboardFaces
 } from "./dashboardTypes";
 
 let log = { log: console.log };
@@ -31,7 +32,7 @@ export const shutdown = async () => {
 
 export const setup = start => {
   if (showDashboard) {
-    childProcess = fork(__dirname + "/child-dashboard.js");
+    childProcess = fork(__dirname + "/dashboard-child.js");
     childProcess.on("message", msg => handleIncomingMessage(msg));
     log.log = (...args) => {
       childProcess.send({
@@ -58,6 +59,19 @@ export const addRecord = (points: IFaceRecord[], delta: number) => {
   } else {
     const buffer = " ".repeat(4 - delta.toString().length);
     log.log("Delta:", buffer, delta, "  Faces:", JSON.stringify(points));
+  }
+};
+export const updatesFaces = (faces: IFace[], target: IFace) => {
+  if (showDashboard && childProcess) {
+    childProcess.send({
+      type: "faces",
+      faces,
+      target,
+      time: Date.now()
+    } as IDashboardFaces);
+  } else {
+    // const buffer = " ".repeat(4 - delta.toString().length);
+    // log.log("Delta:", buffer, delta, "  Faces:", JSON.stringify(points));
   }
 };
 

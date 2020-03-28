@@ -51,8 +51,8 @@ board.on("ready", async () => {
   await eyes.setup(board);
   eyes.start();
   movement.setup();
-  const faceSubject = await detection.setup();
-  behaviour.setup(faceSubject);
+  const recordSubject = await detection.setup();
+  behaviour.setup(recordSubject);
 
   board.on("exit", function() {
     shutdown();
