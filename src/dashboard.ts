@@ -1,13 +1,14 @@
 import { fork } from 'child_process';
 import { showDashboard } from './config';
-import { IFaceRecord, IFace } from './interfaces';
+import { IFaceRecord, IFace, BEHAVIOUR_STATE } from './interfaces';
 import {
   IChildProcessMessage,
   IDashboardSetup,
   IDashboardLog,
-  IDashboardRecord,
-  IDashboardFaces,
+  IDashboardDetections,
+  IDashboardBehaviour,
 } from './dashboardTypes';
+import { since } from './utils';
 
 let log = { log: console.log };
 let childProcess;
@@ -48,30 +49,32 @@ export const setup = start => {
   }
 };
 
+const start = Date.now();
+
 // PUBLIC FUNCTIONS
-export const addRecord = (points: IFaceRecord[], delta: number) => {
+export const addDetections = (points: IFaceRecord[], delta: number) => {
   if (showDashboard && childProcess) {
     childProcess.send({
-      type: 'record',
+      type: 'detections',
       points,
       delta,
-    } as IDashboardRecord);
+    } as IDashboardDetections);
   } else {
-    const buffer = ' '.repeat(4 - delta.toString().length);
-    log.log('Delta:', buffer, delta, '  Faces:', JSON.stringify(points));
+    const buffer = ' '.repeat(9 - delta.toString().length);
+    log.log(since(start), 'Delta:', buffer, delta, '  Faces:', JSON.stringify(points));
   }
 };
-export const updatesFaces = (faces: IFace[], target: IFace) => {
+export const updateBehaviour = (faces: IFace[], state: BEHAVIOUR_STATE) => {
   if (showDashboard && childProcess) {
     childProcess.send({
-      type: 'faces',
+      type: 'behaviour',
       faces,
-      target,
+      state,
       time: Date.now(),
-    } as IDashboardFaces);
+    } as IDashboardBehaviour);
   } else {
-    // const buffer = " ".repeat(4 - delta.toString().length);
-    // log.log("Delta:", buffer, delta, "  Faces:", JSON.stringify(points));
+    const buffer = ' '.repeat(9 - state.length);
+    log.log(since(start), 'State:', buffer, state, '  Faces:', JSON.stringify(faces));
   }
 };
 

@@ -1,5 +1,4 @@
-import { IFaceRecord, IFace } from './interfaces';
-import { KnownFace } from './faceModel';
+import { IFaceRecord, IFace, BEHAVIOUR_STATE } from './interfaces';
 
 export interface IChildProcessMessage {
   type: string;
@@ -11,12 +10,12 @@ export interface IDashboardSetup extends IChildProcessMessage {
 export interface IDashboardLog extends IChildProcessMessage {
   data: any[];
 }
-export interface IDashboardRecord extends IChildProcessMessage {
+export interface IDashboardDetections extends IChildProcessMessage {
   points: IFaceRecord[];
   delta: number;
 }
-export interface IDashboardFaces extends IChildProcessMessage {
+export interface IDashboardBehaviour extends IChildProcessMessage {
   faces: IFace[];
-  target: IFace;
+  state: BEHAVIOUR_STATE;
   time: number;
 }

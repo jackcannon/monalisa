@@ -13,18 +13,30 @@ export interface IFaceRecord extends IFacePoint {
 
 export interface IFace {
   point: IFaceRecord; // last known location
-  historicalPoints: IFaceRecord[];
+  // historicalPoints: IFaceRecord[];
   isTarget: boolean;
   firstSeen: number;
   lastSeen: number;
 }
 
-export interface ILookedAt {
-  face: IFaceRecord;
-  firstSeen: number;
-  lastSeen: number;
-  count: number;
-  otherFaces?: IFaceRecord[];
+export interface ITargetManager {
+  target: any;
+  targetSince: number;
+}
+
+// export interface ILookedAt {
+//   face: IFaceRecord;
+//   firstSeen: number;
+//   lastSeen: number;
+//   count: number;
+//   otherFaces?: IFaceRecord[];
+// }
+
+export enum BEHAVIOUR_STATE {
+  AT_TARGET = 'target',
+  SEARCHING = 'searching',
+  SLEEPING = 'sleeping',
+  WAKING_UP = 'waking',
 }
 
 export interface IEyeConfig {
@@ -53,7 +65,8 @@ export enum OLED_COLOR {
 
 export enum MOVEMENT_TYPE {
   FACE = 'face',
-  RANDOM = 'random',
+  SEARCH = 'search',
+  TIRED = 'tired', // sleeping/waking
 }
 
 export enum MOVE_TYPE {
@@ -97,12 +110,9 @@ export enum EYE_TYPE {
   NOT_LOOKING = 'notLooking',
   BLINKING = 'blinking',
   WINKING = 'winking',
-}
-
-export enum BEHAVIOUR_STATE {
-  AT_TARGET = 'target',
-  AROUND_RANDOMLY = 'random',
-  SLEEP = 'sleep',
+  DROWSY_1 = 'drowsy1',
+  DROWSY_2 = 'drowsy2',
+  CLOSED = 'closed',
 }
 
 // Worker messages

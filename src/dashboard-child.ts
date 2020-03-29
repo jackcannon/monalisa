@@ -6,18 +6,20 @@ import {
   dontBlinkDistanceThreshold,
   durationLookingAtEachFace,
   durationBeforeForgettingFace,
-  randomBlinking,
-  lookRandomlyAtSomethingDurationBase,
-  lookRandomlyAtSomethingDurationRandom,
   moveType,
+  enableSleeping,
+  enableBlinking,
+  enableWinking,
+  sameFaceThreshold,
+  cullFaceThreshold,
 } from './config';
 import {
   IDashboardSetup,
   IDashboardLog,
-  IDashboardRecord,
-  IDashboardFaces,
+  IDashboardDetections,
+  IDashboardBehaviour,
 } from './dashboardTypes';
-import { MOVEMENT_TYPE } from './interfaces';
+import { MOVEMENT_TYPE, IPoint, IFaceRecord } from './interfaces';
 
 const blessed = require('blessed');
 const contrib = require('blessed-contrib');
@@ -30,15 +32,17 @@ const configArr = [
   ['savePhotoOnDetection', savePhotoOnDetection],
   ['photoWidth', photoWidth],
   ['moveSpeed - FACE', moveSpeed[MOVEMENT_TYPE.FACE]],
-  ['moveSpeed - RANDOM', moveSpeed[MOVEMENT_TYPE.RANDOM]],
+  ['moveSpeed - SEARCH', moveSpeed[MOVEMENT_TYPE.SEARCH]],
   ['moveType - FACE', moveType[MOVEMENT_TYPE.FACE]],
-  ['moveType - RANDOM', moveType[MOVEMENT_TYPE.RANDOM]],
+  ['moveType - SEARCH', moveType[MOVEMENT_TYPE.SEARCH]],
   ['dontBlinkDistanceThreshold', dontBlinkDistanceThreshold],
   ['durationLookingAtEachFace', durationLookingAtEachFace],
   ['durationBeforeForgettingFace', durationBeforeForgettingFace],
-  ['randomBlinking', randomBlinking],
-  ['lookRandomlyAtSomethingDurationBase', lookRandomlyAtSomethingDurationBase],
-  ['lookRandomlyAtSomethingDurationRandom', lookRandomlyAtSomethingDurationRandom],
+  ['enableSleeping', enableSleeping],
+  ['enableBlinking', enableBlinking],
+  ['enableWinking', enableWinking],
+  ['sameFaceThreshold', sameFaceThreshold],
+  ['cullFaceThreshold', cullFaceThreshold],
 ];
 
 process.on('message', msg => handleIncomingMessage(msg));
@@ -51,11 +55,11 @@ const handleIncomingMessage = msg => {
     case 'log':
       log(msg);
       break;
-    case 'record':
-      addRecord(msg);
+    case 'detections':
+      addDetections(msg);
       break;
-    case 'faces':
-      updateFaces(msg);
+    case 'behaviour':
+      updateBehaviour(msg);
       break;
   }
 };
@@ -223,7 +227,7 @@ const updateFaceBoxes = (records, count) => {
     };
   });
 };
-const updateFaceMapBox = (records, count) => {
+const updateFaceMapBox = (faces: IPoint[] = [], detections: IFaceRecord[] = []) => {
   const width = faceMapBox.width - 2;
   const height = faceMapBox.height - 2;
   const empty = ' ';
@@ -242,9 +246,18 @@ const updateFaceMapBox = (records, count) => {
   const markers = getSymbolsFromAscii(ascii);
 
   const limit = (val, max) => Math.max(0, Math.min(val, max - 1));
-  records.map((face, i) => {
-    const x = limit(width - Math.ceil(width * face.x), width);
-    const y = limit(Math.floor(height * face.y), height);
+  const getCharCoors = (point: IPoint) => ({
+    x: limit(width - Math.ceil(width * point.x), width),
+    y: limit(Math.floor(height * point.y), height),
+  });
+
+  detections.map((detection, i) => {
+    const { x, y } = getCharCoors(detection);
+    const displayString = blessedStyleText('X', 'black', 'white');
+    space[y].splice(x, 1, displayString);
+  });
+  faces.map((face, i) => {
+    const { x, y } = getCharCoors(face);
     const faceCol = faceColours[i % faceColours.length];
     const displayString = blessedStyleText(i + 1, faceCol);
     space[y].splice(x, 1, displayString);
@@ -264,38 +277,36 @@ const updateFaceMapBox = (records, count) => {
 };
 
 // DATA
-
 let detectionTimes = [];
 // if (showDashboard) {
 //   detectionLine.setData(formatDetectionLineData(detectionTimes, totalDetectionCount));
 // }
 let totalRecordCount = 0;
-let faceRecords = [];
+let detectionRecords = [];
 
 const tidyData = () => {
   detectionTimes = detectionTimes.slice(dataLength);
-  faceRecords = faceRecords.slice(dataLength);
+  detectionRecords = detectionRecords.slice(dataLength);
 };
 
-const addRecord = ({ points, delta }: IDashboardRecord) => {
+const addDetections = ({ points, delta }: IDashboardDetections) => {
   totalRecordCount++;
   detectionTimes.push(delta);
-  faceRecords.push(points);
+  detectionRecords.push(points);
   tidyData();
 
   detectionLine.setData(formatDetectionLineData(detectionTimes, totalRecordCount));
-  faceNumLine.setData(formatFaceNumData(faceRecords, totalRecordCount));
+  faceNumLine.setData(formatFaceNumData(detectionRecords, totalRecordCount));
   updateFaceBoxes(points, totalRecordCount);
-  // updateFaceMapBox(points, totalRecordCount);
 
   // scrn.render();
 };
 
-const updateFaces = ({ faces, target, time }: IDashboardFaces) => {
+const updateBehaviour = ({ faces, state, time }: IDashboardBehaviour) => {
   // debug("face time to send:", time, Date.now() - time);
-  faceMapBox.setLabel('' + (Date.now() - time));
-  const records = faces.map(face => face.point);
-  updateFaceMapBox(records, 1);
+  faceMapBox.setLabel('' + state + ' ' + (Date.now() - time));
+  const facePoints = faces.map(face => face.point);
+  updateFaceMapBox(facePoints, detectionRecords[detectionRecords.length - 1]);
 
   // scrn.render();
 };

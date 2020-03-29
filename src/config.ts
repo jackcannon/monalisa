@@ -1,4 +1,11 @@
-import { DETECTION_TYPE, OLED_COLOR, MOVE_TYPE, EASE_TYPE, MOVEMENT_TYPE } from './interfaces';
+import {
+  DETECTION_TYPE,
+  OLED_COLOR,
+  MOVE_TYPE,
+  EASE_TYPE,
+  MOVEMENT_TYPE,
+  IPoint,
+} from './interfaces';
 
 // ----------------------------
 //
@@ -6,7 +13,6 @@ import { DETECTION_TYPE, OLED_COLOR, MOVE_TYPE, EASE_TYPE, MOVEMENT_TYPE } from 
 //
 // ----------------------------
 
-// WARNING: Dashboard slows everything down quite a bit.
 export const showDashboard = true;
 
 // USE FACEAPI
@@ -94,18 +100,21 @@ export let oledForeColor = OLED_COLOR.BLACK;
 // Speed. Higher = slower
 export const moveSpeed = {
   [MOVEMENT_TYPE.FACE]: 25,
-  [MOVEMENT_TYPE.RANDOM]: 60,
+  [MOVEMENT_TYPE.SEARCH]: 60,
+  [MOVEMENT_TYPE.TIRED]: 90,
 };
 
 // method to move to look at subject (LOOK, EASE)
 export const moveType = {
   [MOVEMENT_TYPE.FACE]: MOVE_TYPE.EASE,
-  [MOVEMENT_TYPE.RANDOM]: MOVE_TYPE.EASE,
+  [MOVEMENT_TYPE.SEARCH]: MOVE_TYPE.EASE,
+  [MOVEMENT_TYPE.TIRED]: MOVE_TYPE.EASE,
 };
 
 export const easeType = {
   [MOVEMENT_TYPE.FACE]: EASE_TYPE.inQuad,
-  [MOVEMENT_TYPE.RANDOM]: EASE_TYPE.inOutQuad,
+  [MOVEMENT_TYPE.SEARCH]: EASE_TYPE.inOutQuad,
+  [MOVEMENT_TYPE.TIRED]: EASE_TYPE.inOutBounce,
 };
 
 // Don't blink if moving more distance than this
@@ -119,11 +128,17 @@ export const dontBlinkDistanceThreshold = 1;
 
 export const durationLookingAtEachFace = 5000;
 export const durationBeforeForgettingFace = 4000;
+export const minimumDurationToBeTargetable = 1000;
 
-export const randomBlinking = false;
+export const enableSleeping = false;
+export const enableBlinking = false;
+export const enableWinking = false;
 
-export const lookRandomlyAtSomethingDurationBase = 5000;
-export const lookRandomlyAtSomethingDurationRandom = 5000;
+export const sleepingMidPoint: IPoint = { x: 0.5, y: 0.5 };
+export const sleepingRestPoint: IPoint = { x: 0.5, y: 0.8 };
 
-export const sameFaceThreshold = photoWidth * 0.1;
-export const cullFaceThreshold = photoWidth * 0.15;
+export const searchDurationBase = 5000;
+export const searchDurationRandom = 5000;
+
+export const sameFaceThreshold = 0.1;
+export const cullFaceThreshold = 0.15;

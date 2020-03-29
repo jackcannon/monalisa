@@ -3,7 +3,7 @@ import { filter } from 'rxjs/operators';
 
 import { createTimer, toFixed } from './utils';
 import { IFaceRecord, DETECTION_TYPE } from './interfaces';
-import { log, addRecord } from './dashboard';
+import { log, addDetections } from './dashboard';
 import { useWorker, detectionType } from './config';
 
 import { startDetection as startOpencv } from './detection-opencv';
@@ -49,6 +49,6 @@ const startListening = () => {
           time: point.time,
         } as IFaceRecord),
     );
-    addRecord(displayPoints, delta);
+    addDetections(displayPoints, delta);
   });
 };

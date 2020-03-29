@@ -1,6 +1,12 @@
-import { IFace, IFaceRecord, IPoint } from './interfaces';
-import { sameFaceThreshold, cullFaceThreshold, durationBeforeForgettingFace } from './config';
-import { distanceBetweenPoints } from './utils';
+import { IFace, IFaceRecord, IPoint, ITargetManager } from './interfaces';
+import {
+  sameFaceThreshold,
+  cullFaceThreshold,
+  durationBeforeForgettingFace,
+  durationLookingAtEachFace,
+  minimumDurationToBeTargetable,
+} from './config';
+import { distanceBetweenPoints, since } from './utils';
 import { log } from './dashboard';
 
 const dataLimit = 100;
@@ -27,12 +33,21 @@ export class KnownFace implements IFace {
   }
 
   isForgotten() {
-    return Date.now() - this.lastSeen > durationBeforeForgettingFace;
+    return since(this.lastSeen) > durationBeforeForgettingFace;
+  }
+
+  isTargetable() {
+    return since(this.firstSeen) > minimumDurationToBeTargetable;
   }
 
   toData(): IFace {
-    const { point, historicalPoints, isTarget, firstSeen, lastSeen } = this;
-    return { point, historicalPoints, isTarget, firstSeen, lastSeen } as IFace;
+    const { point, isTarget, firstSeen, lastSeen } = this;
+    return { point, isTarget, firstSeen, lastSeen } as IFace;
+  }
+
+  updateTarget(target: KnownFace) {
+    this.isTarget = target === this;
+    return this.isTarget;
   }
 
   update(newPoint: IFaceRecord) {
@@ -50,14 +65,17 @@ export class KnownFace implements IFace {
   }
 }
 
-class FaceModel {
+export class FaceManager implements ITargetManager {
   knownFaces: KnownFace[] = [];
   target: KnownFace = null;
+  targetSince: number = 0;
 
   get prioritisedFaces(): KnownFace[] {
-    return this.target
-      ? [this.target, ...this.knownFaces.filter(face => face !== this.target)]
-      : this.knownFaces;
+    return this.target ? [this.target, ...this.otherFaces] : this.knownFaces;
+  }
+
+  get otherFaces(): KnownFace[] {
+    return this.knownFaces.filter(face => face !== this.target);
   }
 
   toData(): { faces: IFace[]; target: IFace } {
@@ -79,17 +97,35 @@ class FaceModel {
     }
   }
 
+  updateTarget() {
+    const noCurrTarget = !this.target && this.knownFaces.length;
+    const targetGone = !this.knownFaces.includes(this.target);
+    const timeToSwitch = since(this.targetSince) > durationLookingAtEachFace;
+    const eligibleFaces = timeToSwitch && this.otherFaces.filter(face => face.isTargetable());
+    if (noCurrTarget || targetGone || (timeToSwitch && eligibleFaces.length)) {
+      let candidates = eligibleFaces || this.otherFaces; // eligableFaces only for timeToSwitch
+      if (candidates.length) {
+        this.target = candidates[Math.floor(Math.random() * candidates.length)];
+        this.targetSince = Date.now();
+      }
+    }
+    this.knownFaces.forEach(face => face.updateTarget(this.target));
+  }
+
   updateFaces(points: IFaceRecord[]) {
     const unused = [...points];
-    this.prioritisedFaces.forEach(face => {
-      const pointsDistances = unused.map(point => face.distanceTo(point));
-      const matches = unused
-        .filter(p => pointsDistances[unused.indexOf(p)])
-        .sort((a, b) => pointsDistances[unused.indexOf(a)] - pointsDistances[unused.indexOf(b)]);
-      face.update(matches[0]);
-      unused.splice(unused.indexOf(matches[0]));
-    });
 
+    this.prioritisedFaces.forEach(face => {
+      let matches = unused.filter(p => face.isSameFace(p));
+      const pointsDistances = matches.map(point => face.distanceTo(point));
+      matches = matches.sort(
+        (a, b) => pointsDistances[matches.indexOf(a)] - pointsDistances[matches.indexOf(b)],
+      );
+      face.update(matches[0]);
+      if (matches[0]) {
+        unused.splice(unused.indexOf(matches[0]));
+      }
+    });
     // removing old faces goes here
     this.prioritisedFaces.filter(face => face.isForgotten()).forEach(face => this.removeFace(face));
 
@@ -97,7 +133,9 @@ class FaceModel {
       point => !this.knownFaces.find(face => face.isInCullSpace(point)),
     );
     nonCulled.forEach(point => this.addFace(point));
+
+    this.updateTarget();
   }
 }
 
-export const faceModel = new FaceModel();
+export const faceManager = new FaceManager();

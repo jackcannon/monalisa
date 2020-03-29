@@ -5,7 +5,7 @@ export const createTimer = name => {
   const start = Date.now();
   let last = Date.now();
 
-  return function (...args) {
+  return function(...args) {
     const now = Date.now();
     const diff = now - last;
     last = now;
@@ -18,6 +18,8 @@ export const delay = ms => {
     setTimeout(resolve, ms);
   });
 };
+
+export const since = (time: number) => Date.now() - time;
 
 export const toFixed = (num, decimalPlaces = 3) =>
   Math.round(num * Math.pow(10, decimalPlaces)) / Math.pow(10, decimalPlaces);
@@ -38,7 +40,7 @@ export const randomID = () => 1000000 + Math.floor(Math.random() * 9000000);
 export const getPromise = (subject: Subject<any>): Promise<any> =>
   subject.pipe(first(item => !!item)).toPromise();
 
-export const blessedStyleText = (text: string, fg?: string, bg?: string) => {
+export const blessedStyleText = (text: any, fg?: string, bg?: string) => {
   let result = text;
   if (fg) {
     result = `{${fg}-fg}${result}{/${fg}-fg}`;
