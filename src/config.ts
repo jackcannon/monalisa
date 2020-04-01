@@ -5,6 +5,7 @@ import {
   EASE_TYPE,
   MOVEMENT_TYPE,
   IPoint,
+  BEHAVIOUR_STATE,
 } from './interfaces';
 
 // ----------------------------
@@ -126,19 +127,22 @@ export const dontBlinkDistanceThreshold = 1;
 //
 // ----------------------------
 
-export const durationLookingAtEachFace = 5000;
-export const durationBeforeForgettingFace = 4000;
-export const minimumDurationToBeTargetable = 1000;
+export const durationLookingAtEachFace = 5_000;
+export const durationBeforeForgettingFace = 2_000;
+export const minimumDurationToBeTargetable = 500;
+export const durationSearchingBeforeSleeping = 30_000;
 
 export const enableSleeping = false;
 export const enableBlinking = false;
 export const enableWinking = false;
 
+export const startingState = BEHAVIOUR_STATE.SLEEPING;
+
 export const sleepingMidPoint: IPoint = { x: 0.5, y: 0.5 };
 export const sleepingRestPoint: IPoint = { x: 0.5, y: 0.8 };
 
-export const searchDurationBase = 5000;
-export const searchDurationRandom = 5000;
+export const searchDurationBase = 5_000;
+export const searchDurationRandom = 5_000;
 
 export const sameFaceThreshold = 0.1;
 export const cullFaceThreshold = 0.15;

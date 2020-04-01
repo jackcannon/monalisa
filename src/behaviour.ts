@@ -14,15 +14,19 @@ import { first, filter } from 'rxjs/operators';
 import { distanceBetweenPoints, delay, toFixed, randomID, since } from './utils';
 import {
   dontBlinkDistanceThreshold,
+  durationSearchingBeforeSleeping,
   searchDurationBase,
   searchDurationRandom,
   enableBlinking,
   sleepingMidPoint,
   sleepingRestPoint,
   enableWinking,
+  startingState,
+  enableSleeping,
 } from './config';
 import { updateBehaviour, log } from './dashboard';
 import { faceManager, FaceManager, KnownFace } from './faceManager';
+import { start } from './worker-eyes';
 
 const eyeConfigs: { [key: string]: (eyeDirection: IPoint) => IEyeConfig } = {
   normal: () => ({}),
@@ -45,11 +49,20 @@ let stateManager = new (class StateManager {
   hasChanged: boolean = false;
   update() {
     const oldState = this.state;
-    if (faceManager.target) {
+
+    if (enableSleeping && oldState === null) {
+      this.state = startingState;
+    } else if (enableSleeping && oldState === BEHAVIOUR_STATE.WAKING_UP) {
+      // do nothing
+    } else if (enableSleeping && oldState === BEHAVIOUR_STATE.SLEEPING) {
+      if (faceManager.target) {
+        this.state = BEHAVIOUR_STATE.WAKING_UP;
+      }
+    } else if (faceManager.target) {
       this.state = BEHAVIOUR_STATE.AT_TARGET;
     } else if (searchManager.target) {
       this.state = BEHAVIOUR_STATE.SEARCHING;
-    } else {
+    } else if (enableSleeping) {
       this.state = BEHAVIOUR_STATE.SLEEPING;
     }
 
@@ -61,18 +74,28 @@ class SearchManager implements ITargetManager {
   target: IPoint;
   targetSince: number;
   targetExpiration: number;
+  searchingSince: number;
   hasChanged: boolean = false;
+
+  isReadyToSleep(): boolean {
+    return (
+      enableSleeping &&
+      !!this.searchingSince &&
+      since(this.searchingSince) > durationSearchingBeforeSleeping
+    );
+  }
 
   clear() {
     this.target = null;
     this.targetSince = null;
     this.targetExpiration = null;
+    this.searchingSince = null;
   }
 
   setNewTarget() {
     this.target = {
       x: toFixed(Math.random(), 3),
-      y: toFixed(Math.min(Math.random(), 0.9), 3),
+      y: toFixed(Math.random() * 0.8, 3),
     };
     this.targetSince = Date.now();
     const duration = searchDurationBase + Math.floor(Math.random() * searchDurationRandom);
@@ -81,7 +104,7 @@ class SearchManager implements ITargetManager {
 
   update(faceTarget: KnownFace): boolean {
     this.hasChanged = false;
-    if (faceTarget) {
+    if (faceTarget || this.isReadyToSleep()) {
       this.clear();
       this.hasChanged = true;
     } else {
@@ -90,6 +113,9 @@ class SearchManager implements ITargetManager {
       if (noTarget || expired) {
         this.setNewTarget();
         this.hasChanged = true;
+      }
+      if (!this.searchingSince) {
+        this.searchingSince = Date.now();
       }
     }
     return this.hasChanged;
@@ -114,6 +140,9 @@ export const drawEyes = (type: EYE_TYPE, eyeDirection: IPoint = { x: 0.5, y: 0.5
   };
   let configs = [eyeConfigs.normal, eyeConfigs.normal];
   switch (type) {
+    case EYE_TYPE.NORMAL:
+      configs = [eyeConfigs.normal, eyeConfigs.normal];
+      break;
     case EYE_TYPE.LOOKING_AT_FACE:
       configs = [eyeConfigs.seeing, eyeConfigs.seeing];
       break;
@@ -150,17 +179,28 @@ const goToSleep = async () => {
   await movement.toRelativeDegrees(sleepingRestPoint, MOVEMENT_TYPE.TIRED);
   drawEyes(EYE_TYPE.CLOSED);
 };
+const blink = async (startEyes: EYE_TYPE = EYE_TYPE.NORMAL, endEyes: EYE_TYPE = startEyes) => {
+  if (startEyes) {
+    drawEyes(startEyes);
+  }
+  await delay(1500);
+  drawEyes(EYE_TYPE.BLINKING);
+  await delay(1500);
+  if (endEyes) {
+    drawEyes(endEyes);
+  }
+};
 const wakeUp = async () => {
+  // await movement.toRelativeDegrees(sleepingRestPoint, MOVEMENT_TYPE.TIRED);
+  // await delay(500);
+
+  // const start = Date.now();
   drawEyes(EYE_TYPE.DROWSY_2);
   await movement.toRelativeDegrees(sleepingMidPoint, MOVEMENT_TYPE.TIRED);
-  drawEyes(EYE_TYPE.DROWSY_1);
-  await delay(50);
-  drawEyes(EYE_TYPE.BLINKING);
-  await delay(10);
-  drawEyes(EYE_TYPE.LOOKING_AT_FACE);
-  await delay(50);
-  drawEyes(EYE_TYPE.BLINKING);
-  await delay(10);
+
+  // await blink(EYE_TYPE.DROWSY_1);
+
+  stateManager.state = BEHAVIOUR_STATE.AWAKE;
 };
 
 const eyesAfterLook = distance => {
@@ -203,6 +243,8 @@ export const onFaces = (faces: IFaceRecord[]) => {
         wakeUp();
       }
       break;
+    case BEHAVIOUR_STATE.AWAKE:
+      throw new Error('Shouldnt be in AWAKE state');
   }
 
   // update Dashboard

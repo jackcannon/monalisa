@@ -37,6 +37,7 @@ export enum BEHAVIOUR_STATE {
   SEARCHING = 'searching',
   SLEEPING = 'sleeping',
   WAKING_UP = 'waking',
+  AWAKE = 'awake',
 }
 
 export interface IEyeConfig {
@@ -106,6 +107,7 @@ export enum EASE_TYPE {
 }
 
 export enum EYE_TYPE {
+  NORMAL = 'normal',
   LOOKING_AT_FACE = 'lookingAtFace',
   NOT_LOOKING = 'notLooking',
   BLINKING = 'blinking',

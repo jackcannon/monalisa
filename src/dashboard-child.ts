@@ -1,4 +1,11 @@
-import { formatTime, formatAsciiNumbers, getSymbolsFromAscii, blessedStyleText } from './utils';
+import {
+  formatTime,
+  formatAsciiNumbers,
+  getSymbolsFromAscii,
+  blessedStyleText,
+  pad,
+  timeSince,
+} from './utils';
 import {
   savePhotoOnDetection,
   photoWidth,
@@ -19,7 +26,8 @@ import {
   IDashboardDetections,
   IDashboardBehaviour,
 } from './dashboardTypes';
-import { MOVEMENT_TYPE, IPoint, IFaceRecord } from './interfaces';
+import { MOVEMENT_TYPE, IPoint, IFaceRecord, IFace, BEHAVIOUR_STATE } from './interfaces';
+import { KnownFace } from './faceManager';
 
 const blessed = require('blessed');
 const contrib = require('blessed-contrib');
@@ -52,9 +60,9 @@ const handleIncomingMessage = msg => {
     case 'setup':
       setup(msg);
       break;
-    case 'log':
-      log(msg);
-      break;
+    // case 'log':
+    //   log(msg);
+    //   break;
     case 'detections':
       addDetections(msg);
       break;
@@ -74,25 +82,25 @@ const scrn = blessed.screen();
 const grid = new contrib.grid({ rows: 12, cols: 12, screen: scrn });
 
 // SETUP GRID
-const dashLog = grid.set(9, 3, 3, 3, contrib.log, {
-  fg: 'brightblue',
-  selectedFg: 'white',
-  label: 'Main Log',
-});
-const log = (msg: IDashboardLog) =>
-  dashLog.log(
-    msg.data
-      .map(arg => {
-        if (typeof arg === 'object') {
-          return JSON.stringify(arg);
-        } else {
-          return arg;
-        }
-      })
-      .join(' '),
-  );
+// const dashLog = grid.set(9, 3, 3, 3, contrib.log, {
+//   fg: 'brightblue',
+//   selectedFg: 'white',
+//   label: 'Main Log',
+// });
+// const log = (msg: IDashboardLog) =>
+//   dashLog.log(
+//     msg.data
+//       .map(arg => {
+//         if (typeof arg === 'object') {
+//           return JSON.stringify(arg);
+//         } else {
+//           return arg;
+//         }
+//       })
+//       .join(' '),
+//   );
 
-const debug = (...data) => log({ type: 'log', data });
+// const debug = (...data) => log({ type: 'log', data });
 
 const detectionLine = grid.set(0, 7, 9, 5, contrib.line, {
   style: {
@@ -137,14 +145,14 @@ const lifetime = grid.set(0, 0, 3, 6, blessed.box, {
 });
 lifetime.setContent('1234');
 
-const faces = [0, 1, 2, 3].map(v => {
+const faceBoxes = [0, 1, 2, 3].map(v => {
   return grid.set(v * 3, 6, 3, 1, blessed.box, {
     label: 'Face ' + (v + 1),
     tags: true,
   });
 });
 
-const configBox1 = grid.set(9, 0, 3, 3, blessed.box, {
+const configBox1 = grid.set(9, 3, 3, 3, blessed.box, {
   label: 'Config',
   tags: true,
   content: (() => {
@@ -164,7 +172,7 @@ const configBox1 = grid.set(9, 0, 3, 3, blessed.box, {
   })(),
   style: {
     border: {
-      fg: 'brightblue',
+      fg: 'cyan',
     },
   },
 });
@@ -180,6 +188,30 @@ const faceMapBox = grid.set(3, 0, 6, 6, blessed.box, {
   },
 });
 
+const createStateBox = (id, ...pos) => {
+  return grid.set(...pos, blessed.box, {
+    label: null,
+    content: id,
+    tags: true,
+  });
+};
+const stateBoxes = {
+  [BEHAVIOUR_STATE.AT_TARGET]: createStateBox('AT_TARGET', 9, 0, 3, 1),
+  [BEHAVIOUR_STATE.SEARCHING]: createStateBox('SEARCHING', 9, 1, 3, 1),
+  [BEHAVIOUR_STATE.SLEEPING]: createStateBox('SLEEPING', 9, 2, 1, 1),
+  [BEHAVIOUR_STATE.WAKING_UP]: createStateBox('WAKING_UP', 10, 2, 1, 1),
+  [BEHAVIOUR_STATE.AWAKE]: createStateBox('AWAKE', 11, 2, 1, 1),
+  get all(): any[][] {
+    return [
+      ['AT_TARGET', this[BEHAVIOUR_STATE.AT_TARGET]],
+      ['SEARCHING', this[BEHAVIOUR_STATE.SEARCHING]],
+      ['SLEEPING', this[BEHAVIOUR_STATE.SLEEPING]],
+      ['WAKING_UP', this[BEHAVIOUR_STATE.WAKING_UP]],
+      ['AWAKE', this[BEHAVIOUR_STATE.AWAKE]],
+    ];
+  },
+};
+
 // FORMAT FUNCTION
 const formatDetectionLineData = (times: number[], count: number) => ({
   title: 'Delta Times',
@@ -191,9 +223,11 @@ const formatFaceNumData = (records, count: number) => ({
   x: records.map((_v, i) => (i + count - records.length).toString()),
   y: records.map(points => points.length),
 });
-const formatFaceContent = (points, colour: string) => {
-  let str = points ? `{${colour}-fg}` : '{white-fg}';
-  if (points) {
+const formatFaceContent = (face: IFace, colour: string) => {
+  let str = face ? `{${colour}-fg}` : '{white-fg}';
+  if (face) {
+    const targetColour = face.isTarget ? 'white' : colour;
+
     str += `
 {center}      XXX{/center}
 {center}     XXX {/center}
@@ -201,9 +235,11 @@ const formatFaceContent = (points, colour: string) => {
 {center} XXXX    {/center}
 {center}  XX     {/center}
 
-X: ${points.x}
-Y: ${points.y}
-Score: ${points.score}
+{${targetColour}-fg}Is Target: ${face.isTarget}{/${targetColour}-fg}
+
+X: ${pad(face.point.x, 4)}{|}Y: ${pad(face.point.y, 4)}
+First: ${timeSince(face.firstSeen)}
+Last: ${timeSince(face.lastSeen)}
 `;
   } else {
     str += `
@@ -217,13 +253,13 @@ Score: ${points.score}
   str += '{/}';
   return str;
 };
-const updateFaceBoxes = (records, count) => {
-  faces.forEach((face, i) => {
+const updateFaceBoxes = (faces: IFace[]) => {
+  faceBoxes.forEach((faceBox, i) => {
     const colour = faceColours[i % faceColours.length];
-    const content = formatFaceContent(records[i], colour);
-    face.setContent(content);
-    face.style.border = {
-      fg: records[i] ? colour : 'black',
+    const content = formatFaceContent(faces[i], colour);
+    faceBox.setContent(content);
+    faceBox.style.border = {
+      fg: faces[i] ? colour : 'black',
     };
   });
 };
@@ -275,6 +311,33 @@ const updateFaceMapBox = (faces: IPoint[] = [], detections: IFaceRecord[] = []) 
   });
   faceMapBox.setContent(space.map(col => col.join('')).join(''));
 };
+const updateStateBoxes = state => {
+  stateBoxes.all.forEach(([id, stateBox]) => {
+    const buffer = '\n'.repeat(Math.floor((stateBox.height - 2 - 1) / 2));
+    const content = `${buffer}{center}${id}{/center}`;
+    stateBox.setContent(content);
+    stateBox.style = {
+      fg: 'black',
+      bg: 'black',
+      bold: true,
+      border: {
+        fg: 'black',
+        bg: 'black',
+        bold: true,
+      },
+    };
+  });
+  stateBoxes[state].style = {
+    fg: 'green',
+    bg: 'black',
+    bold: true,
+    border: {
+      fg: 'green',
+      bg: 'black',
+      bold: true,
+    },
+  };
+};
 
 // DATA
 let detectionTimes = [];
@@ -297,18 +360,15 @@ const addDetections = ({ points, delta }: IDashboardDetections) => {
 
   detectionLine.setData(formatDetectionLineData(detectionTimes, totalRecordCount));
   faceNumLine.setData(formatFaceNumData(detectionRecords, totalRecordCount));
-  updateFaceBoxes(points, totalRecordCount);
-
-  // scrn.render();
 };
 
 const updateBehaviour = ({ faces, state, time }: IDashboardBehaviour) => {
-  // debug("face time to send:", time, Date.now() - time);
   faceMapBox.setLabel('' + state + ' ' + (Date.now() - time));
   const facePoints = faces.map(face => face.point);
-  updateFaceMapBox(facePoints, detectionRecords[detectionRecords.length - 1]);
 
-  // scrn.render();
+  updateFaceMapBox(facePoints, detectionRecords[detectionRecords.length - 1]);
+  updateFaceBoxes(faces);
+  updateStateBoxes(state);
 };
 
 // RUN

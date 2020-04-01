@@ -107,6 +107,9 @@ export class FaceManager implements ITargetManager {
       if (candidates.length) {
         this.target = candidates[Math.floor(Math.random() * candidates.length)];
         this.targetSince = Date.now();
+      } else {
+        this.target = null;
+        this.targetSince = null;
       }
     }
     this.knownFaces.forEach(face => face.updateTarget(this.target));
