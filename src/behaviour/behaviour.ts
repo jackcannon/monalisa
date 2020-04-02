@@ -168,5 +168,5 @@ export const onFaces = (faces: IFaceRecord[]) => {
 
   // update Dashboard
   const faceData = faceManager.toData();
-  updateBehaviour(faceData.faces, stateManager.state);
+  updateBehaviour(faceData.faces, stateManager.state, searchManager.target);
 };

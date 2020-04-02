@@ -1,6 +1,6 @@
 import { fork } from 'child_process';
 import { showDashboard } from '../config';
-import { IFaceRecord, IFace, BEHAVIOUR_STATE } from '../interfaces';
+import { IFaceRecord, IFace, BEHAVIOUR_STATE, IPoint } from '../interfaces';
 import {
   IChildProcessMessage,
   IDashboardSetup,
@@ -64,12 +64,13 @@ export const addDetections = (points: IFaceRecord[], delta: number) => {
     log.log(since(start), 'Delta:', buffer, delta, '  Faces:', JSON.stringify(points));
   }
 };
-export const updateBehaviour = (faces: IFace[], state: BEHAVIOUR_STATE) => {
+export const updateBehaviour = (faces: IFace[], state: BEHAVIOUR_STATE, searchTarget: IPoint) => {
   if (showDashboard && childProcess) {
     childProcess.send({
       type: 'behaviour',
       faces,
       state,
+      searchTarget,
       time: Date.now(),
     } as IDashboardBehaviour);
   } else {

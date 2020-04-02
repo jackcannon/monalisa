@@ -70,13 +70,16 @@ export const randomID = () => 1000000 + Math.floor(Math.random() * 9000000);
 export const getPromise = (subject: Subject<any>): Promise<any> =>
   subject.pipe(first(item => !!item)).toPromise();
 
-export const blessedStyleText = (text: any, fg?: string, bg?: string) => {
+export const blessedStyleText = (text: any, fg?: string, bg?: string, bold?: boolean) => {
   let result = text;
   if (fg) {
     result = `{${fg}-fg}${result}{/${fg}-fg}`;
   }
   if (bg) {
     result = `{${bg}-bg}${result}{/${bg}-bg}`;
+  }
+  if (bold) {
+    result = `{bold}${result}{/bold}`;
   }
   return result;
 };
@@ -106,7 +109,10 @@ export const formatAsciiNumbers = (str: string): string[] => {
 };
 
 // Used to generate symbol lists for faceMapBox display
-export const getSymbolsFromAscii = (ascii: string[], empty = ' ') => {
+export const getSymbolsFromAscii = (
+  ascii: string[],
+  empty = ' ',
+): { x: number; y: number; char: string }[] => {
   let centre = { x: 0, y: 0 };
   let symbols = [];
   ascii.forEach((row, y) =>

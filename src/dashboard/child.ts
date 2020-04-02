@@ -144,6 +144,9 @@ const faceBoxes = [0, 1, 2, 3].map(v => {
   return grid.set(v * 3, 6, 3, 1, blessed.box, {
     label: 'Face ' + (v + 1),
     tags: true,
+    style: {
+      bold: true,
+    },
   });
 });
 
@@ -265,44 +268,35 @@ const updateFaceBoxes = (faces: IFace[]) => {
     faceBox.setContent(content);
     faceBox.style.border = {
       fg: faces[i] ? colour : 'black',
+      bold: true,
     };
   });
 };
-const updateFaceMapBox = (faces: IPoint[] = [], detections: IFaceRecord[] = []) => {
+const updateFaceMapBox = (
+  faces: IPoint[] = [],
+  detections: IFaceRecord[] = [],
+  searchTarget: IPoint = null,
+) => {
   const width = faceMapBox.width - 2;
   const height = faceMapBox.height - 2;
   const empty = ' ';
 
   const space = new Array(height).fill(1).map(() => new Array(width).fill(empty));
 
-  // const ascii = [
-  //   "  .-----.  ",
-  //   " /       \\ ",
-  //   "|    X    |",
-  //   " \\       / ",
-  //   "  '-----'  "
-  // ];
-  const ascii = ['  .---.  ', ' /     \\ ', '|   X   |', ' \\     / ', "  '---'  "];
-
-  const markers = getSymbolsFromAscii(ascii);
+  const faceAscii = ['  .---.  ', ' /     \\ ', '|   X   |', ' \\     / ', "  '---'  "];
+  const faceMarkers = getSymbolsFromAscii(faceAscii);
 
   const limit = (val, max) => Math.max(0, Math.min(val, max - 1));
-  const getCharCoors = (point: IPoint) => ({
+  const getCharCoors = (point: IPoint): IPoint => ({
     x: limit(width - Math.ceil(width * point.x), width),
     y: limit(Math.floor(height * point.y), height),
   });
-
-  detections.map((detection, i) => {
-    const { x, y } = getCharCoors(detection);
-    const displayString = blessedStyleText('X', 'black', 'white');
-    space[y].splice(x, 1, displayString);
-  });
-  faces.map((face, i) => {
-    const { x, y } = getCharCoors(face);
-    const faceCol = faceColours[i % faceColours.length];
-    const displayString = blessedStyleText(i + 1, faceCol);
-    space[y].splice(x, 1, displayString);
-
+  const applyMarkers = (
+    markers: { x: number; y: number; char: string }[],
+    { x, y }: IPoint,
+    colour: string,
+    bold: boolean = false,
+  ) => {
     markers
       .filter(
         ({ x: mX, y: mY }) =>
@@ -310,16 +304,57 @@ const updateFaceMapBox = (faces: IPoint[] = [], detections: IFaceRecord[] = []) 
       )
       .forEach(({ x: mX, y: mY, char }) => {
         const char2 = char === '#' ? ' ' : char;
-        const dispChar = blessedStyleText(char2, faceCol);
+        const dispChar = blessedStyleText(char2, colour, null, bold);
         space[y + mY].splice(x + mX, 1, dispChar);
       });
+  };
+
+  detections.map((detection, i) => {
+    const { x, y } = getCharCoors(detection);
+    const displayString = blessedStyleText('X', 'black', 'white');
+    space[y].splice(x, 1, displayString);
   });
+  faces.map((face, i) => {
+    const charCoors = getCharCoors(face);
+    const { x, y } = charCoors;
+    const faceCol = faceColours[i % faceColours.length];
+    const displayString = blessedStyleText(i + 1, faceCol);
+    space[y].splice(x, 1, displayString);
+
+    applyMarkers(faceMarkers, charCoors, faceCol);
+  });
+  if (searchTarget) {
+    const searchAscii = [' .-. ', '| X |', " '-' "];
+    const searchMarkers = getSymbolsFromAscii(searchAscii);
+    const charCoors = getCharCoors(searchTarget);
+    const { x, y } = charCoors;
+    const displayString = blessedStyleText('X', 'red', null, true);
+    space[y].splice(x, 1, displayString);
+
+    applyMarkers(searchMarkers, charCoors, 'red', true);
+  }
   faceMapBox.setContent(space.map(col => col.join('')).join(''));
 };
-const updateStateBoxes = state => {
+
+// This is a mess. 3 ifs for AT_TARGET. needs refactor
+const updateStateBoxes = (state: string, faces: IFace[]) => {
+  let targetIndex;
+  if (state === BEHAVIOUR_STATE.AT_TARGET) {
+    const target = faces.find(face => face.isTarget);
+    targetIndex = target ? faces.indexOf(target) : 0;
+  }
+
   stateBoxes.all.forEach(([id, stateBox]) => {
-    const buffer = '\n'.repeat(Math.floor((stateBox.height - 2 - 1) / 2));
-    const content = `${buffer}{center}${id}{/center}`;
+    let content: string = '';
+
+    if (state === BEHAVIOUR_STATE.AT_TARGET) {
+      const buffer = '\n'.repeat(Math.max(0, Math.floor((stateBox.height - 2 - 3) / 2)));
+      content += `${buffer}{center}${id}{/center}`;
+      content += `\n\n{center}Target: ${targetIndex}{/center}`;
+    } else {
+      const buffer = '\n'.repeat(Math.max(0, Math.floor((stateBox.height - 2 - 1) / 2)));
+      content += `${buffer}{center}${id}{/center}`;
+    }
     stateBox.setContent(content);
     stateBox.style = {
       fg: 'black',
@@ -332,12 +367,24 @@ const updateStateBoxes = state => {
       },
     };
   });
+  let colour = {
+    [BEHAVIOUR_STATE.AT_TARGET]: null,
+    [BEHAVIOUR_STATE.SEARCHING]: 'red',
+    [BEHAVIOUR_STATE.SLEEPING]: 'blue',
+    [BEHAVIOUR_STATE.WAKING_UP]: 'blue',
+    [BEHAVIOUR_STATE.AWAKE]: 'blue',
+  }[state];
+
+  if (state === BEHAVIOUR_STATE.AT_TARGET) {
+    colour = faceColours[targetIndex % faceColours.length];
+  }
+
   stateBoxes[state].style = {
-    fg: 'green',
+    fg: colour,
     bg: 'black',
     bold: true,
     border: {
-      fg: 'green',
+      fg: colour,
       bg: 'black',
       bold: true,
     },
@@ -367,13 +414,13 @@ const addDetections = ({ points, delta }: IDashboardDetections) => {
   faceNumLine.setData(formatFaceNumData(detectionRecords, totalRecordCount));
 };
 
-const updateBehaviour = ({ faces, state, time }: IDashboardBehaviour) => {
+const updateBehaviour = ({ faces, state, time, searchTarget }: IDashboardBehaviour) => {
   faceMapBox.setLabel('' + state + ' ' + (Date.now() - time));
   const facePoints = faces.map(face => face.point);
 
-  updateFaceMapBox(facePoints, detectionRecords[detectionRecords.length - 1]);
+  updateFaceMapBox(facePoints, detectionRecords[detectionRecords.length - 1], searchTarget);
   updateFaceBoxes(faces);
-  updateStateBoxes(state);
+  updateStateBoxes(state, faces);
 };
 
 // RUN

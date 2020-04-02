@@ -1,4 +1,4 @@
-import { IFaceRecord, IFace, BEHAVIOUR_STATE } from '../interfaces';
+import { IFaceRecord, IFace, BEHAVIOUR_STATE, IPoint } from '../interfaces';
 
 export interface IChildProcessMessage {
   type: string;
@@ -17,5 +17,6 @@ export interface IDashboardDetections extends IChildProcessMessage {
 export interface IDashboardBehaviour extends IChildProcessMessage {
   faces: IFace[];
   state: BEHAVIOUR_STATE;
+  searchTarget: IPoint;
   time: number;
 }
