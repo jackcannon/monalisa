@@ -1,4 +1,4 @@
-import { IFaceRecord, IFace, BEHAVIOUR_STATE } from './interfaces';
+import { IFaceRecord, IFace, BEHAVIOUR_STATE } from '../interfaces';
 
 export interface IChildProcessMessage {
   type: string;

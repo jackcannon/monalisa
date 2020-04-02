@@ -5,20 +5,20 @@
  * but using the same interface as detection-opencv
  */
 
+import { BehaviorSubject } from 'rxjs';
+import { first } from 'rxjs/operators';
 import * as faceapi from 'face-api.js';
 import {
   canvas,
   faceDetectionNet,
   getFaceDetectorOptions,
   saveFile,
-} from './face-api/examples-nodejs/commons';
+} from '../lib/face-api/examples-nodejs/commons';
 
-import { BehaviorSubject } from 'rxjs';
-import { first } from 'rxjs/operators';
+import { IFacePoint } from '../interfaces';
+import { toFixed, getPromise } from '../utils';
+import { cameraOptions, savePhotoOnDetection, faceApiConfig } from '../config';
 
-import { IFacePoint } from './interfaces';
-import { toFixed, getPromise } from './utils';
-import { cameraOptions, savePhotoOnDetection, faceApiConfig } from './config';
 import { getFrames } from './cameraHelper';
 
 let recordsSubject: BehaviorSubject<IFacePoint[]> = new BehaviorSubject<IFacePoint[]>(null);
@@ -29,7 +29,7 @@ let faceDetectionOptions;
 let queue;
 
 const setup = async () => {
-  await faceDetectionNet.loadFromDisk('./src/face-api/weights');
+  await faceDetectionNet.loadFromDisk('./src/lib/face-api/weights');
   faceDetectionOptions = getFaceDetectorOptions(faceDetectionNet, {
     minFaceSize: faceApiConfig.minFaceSize,
     scaleFactor: 0.8,

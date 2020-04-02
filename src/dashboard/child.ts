@@ -5,7 +5,7 @@ import {
   blessedStyleText,
   pad,
   timeSince,
-} from './utils';
+} from '../utils';
 import {
   savePhotoOnDetection,
   photoWidth,
@@ -19,15 +19,10 @@ import {
   enableWinking,
   sameFaceThreshold,
   cullFaceThreshold,
-} from './config';
-import {
-  IDashboardSetup,
-  IDashboardLog,
-  IDashboardDetections,
-  IDashboardBehaviour,
-} from './dashboardTypes';
-import { MOVEMENT_TYPE, IPoint, IFaceRecord, IFace, BEHAVIOUR_STATE } from './interfaces';
-import { KnownFace } from './faceManager';
+} from '../config';
+import { MOVEMENT_TYPE, IPoint, IFaceRecord, IFace, BEHAVIOUR_STATE } from '../interfaces';
+
+import { IDashboardSetup, IDashboardDetections, IDashboardBehaviour } from './dashboardTypes';
 
 const blessed = require('blessed');
 const contrib = require('blessed-contrib');

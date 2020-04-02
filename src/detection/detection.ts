@@ -1,19 +1,19 @@
 import { BehaviorSubject } from 'rxjs';
 import { filter } from 'rxjs/operators';
 
-import { createTimer, toFixed } from './utils';
-import { IFaceRecord, DETECTION_TYPE } from './interfaces';
-import { log, addDetections } from './dashboard';
-import { useWorker, detectionType } from './config';
+import { createTimer, toFixed } from '../utils';
+import { IFaceRecord, DETECTION_TYPE } from '../interfaces';
+import { log, addDetections } from '../dashboard/dashboard';
+import { useWorker, detectionType } from '../config';
 
-import { startDetection as startOpencv } from './detection-opencv';
+import { startDetection as startOpencv } from './opencv';
 
 let startFaceapi = () => {};
 if (detectionType === DETECTION_TYPE.FACEAPI && !useWorker) {
-  // import { startDetection as startFaceapi } from "./detection-faceapi";
-  startFaceapi = require('./detection-faceapi.js').startDetection;
+  // import { startDetection as startFaceapi } from "./faceapi";
+  startFaceapi = require('./faceapi.js').startDetection;
 }
-import { startDetection as startWorker } from './detection-worker';
+import { startDetection as startWorker } from './worker';
 
 let recordsSubject: BehaviorSubject<IFaceRecord[]> = null;
 

@@ -2,13 +2,12 @@ import { Board } from 'johnny-five';
 import { RaspiIO } from 'raspi-io';
 import readline from 'readline';
 
-import * as movement from './movement';
-import * as detection from './detection';
-import * as eyes from './eyes';
-import * as behaviour from './behaviour';
-import * as dashboard from './dashboard';
-import { formatTime } from './utils';
-import { delay } from 'rxjs/operators';
+import * as movement from './behaviour/movement';
+import * as detection from './detection/detection';
+import * as eyes from './eyes/eyes';
+import * as behaviour from './behaviour/behaviour';
+import * as dashboard from './dashboard/dashboard';
+import { formatTime, delay } from './utils';
 
 const start = Date.now();
 
@@ -54,7 +53,7 @@ board.on('ready', async () => {
   const recordSubject = await detection.setup();
   behaviour.setup(recordSubject);
 
-  board.on('exit', function () {
+  board.on('exit', function() {
     shutdown();
   });
 });

@@ -2,14 +2,13 @@
   "include": [
     "src/index.ts",
     "src/reset.ts",
-    "src/dashboard-child.ts",
-    "src/worker-faceapi.ts",
-    "src/worker-opencv.ts",
-    "src/worker-pico.ts",
-    "src/worker-eyes.ts",
-    "src/detection-faceapi.ts",
-    "src/face-api/**/*.ts",
-    "src/face-api/**/*.json"
+    "src/dashboard/child.ts",
+    "src/detection/faceapi-worker.ts",
+    "src/detection/opencv-worker.ts",
+    "src/detection/pico-worker.ts",
+    "src/eyes/worker.ts",
+    "src/lib/face-api/**/*.ts",
+    "src/lib/face-api/**/*.json"
   ],
   "compilerOptions": {
     /* Basic Options */

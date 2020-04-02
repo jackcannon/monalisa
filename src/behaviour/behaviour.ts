@@ -1,32 +1,29 @@
+import { BehaviorSubject } from 'rxjs';
+import { first, filter } from 'rxjs/operators';
+
 import {
   IFaceRecord,
   IPoint,
   MOVEMENT_TYPE,
   EYE_TYPE,
   BEHAVIOUR_STATE,
-  ITargetManager,
   IEyeConfig,
-} from './interfaces';
-import * as movement from './movement';
-import * as eyes from './eyes';
-import { BehaviorSubject } from 'rxjs';
-import { first, filter } from 'rxjs/operators';
-import { distanceBetweenPoints, delay, toFixed, randomID, since } from './utils';
+} from '../interfaces';
+import * as eyes from '../eyes/eyes';
+import { delay, toFixed } from '../utils';
 import {
   dontBlinkDistanceThreshold,
-  durationSearchingBeforeSleeping,
-  searchDurationBase,
-  searchDurationRandom,
   enableBlinking,
   sleepingMidPoint,
   sleepingRestPoint,
   enableWinking,
-  startingState,
-  enableSleeping,
-} from './config';
-import { updateBehaviour, log } from './dashboard';
-import { faceManager, FaceManager, KnownFace } from './faceManager';
-import { start } from './worker-eyes';
+} from '../config';
+import { updateBehaviour } from '../dashboard/dashboard';
+
+import * as movement from './movement';
+import { faceManager } from './faceManager';
+import { searchManager } from './searchManager';
+import { stateManager } from './stateManager';
 
 const eyeConfigs: { [key: string]: (eyeDirection: IPoint) => IEyeConfig } = {
   normal: () => ({}),
@@ -44,84 +41,6 @@ const defaultEyeTypes = {
 };
 
 let recordsSubject: BehaviorSubject<IFaceRecord[]>;
-let stateManager = new (class StateManager {
-  state: BEHAVIOUR_STATE = null;
-  hasChanged: boolean = false;
-  update() {
-    const oldState = this.state;
-
-    if (enableSleeping && oldState === null) {
-      this.state = startingState;
-    } else if (enableSleeping && oldState === BEHAVIOUR_STATE.WAKING_UP) {
-      // do nothing
-    } else if (enableSleeping && oldState === BEHAVIOUR_STATE.SLEEPING) {
-      if (faceManager.target) {
-        this.state = BEHAVIOUR_STATE.WAKING_UP;
-      }
-    } else if (faceManager.target) {
-      this.state = BEHAVIOUR_STATE.AT_TARGET;
-    } else if (searchManager.target) {
-      this.state = BEHAVIOUR_STATE.SEARCHING;
-    } else if (enableSleeping) {
-      this.state = BEHAVIOUR_STATE.SLEEPING;
-    }
-
-    this.hasChanged = oldState !== this.state;
-  }
-})();
-
-class SearchManager implements ITargetManager {
-  target: IPoint;
-  targetSince: number;
-  targetExpiration: number;
-  searchingSince: number;
-  hasChanged: boolean = false;
-
-  isReadyToSleep(): boolean {
-    return (
-      enableSleeping &&
-      !!this.searchingSince &&
-      since(this.searchingSince) > durationSearchingBeforeSleeping
-    );
-  }
-
-  clear() {
-    this.target = null;
-    this.targetSince = null;
-    this.targetExpiration = null;
-    this.searchingSince = null;
-  }
-
-  setNewTarget() {
-    this.target = {
-      x: toFixed(Math.random(), 3),
-      y: toFixed(Math.random() * 0.8, 3),
-    };
-    this.targetSince = Date.now();
-    const duration = searchDurationBase + Math.floor(Math.random() * searchDurationRandom);
-    this.targetExpiration = Date.now() + duration;
-  }
-
-  update(faceTarget: KnownFace): boolean {
-    this.hasChanged = false;
-    if (faceTarget || this.isReadyToSleep()) {
-      this.clear();
-      this.hasChanged = true;
-    } else {
-      const noTarget = !this.target;
-      const expired = since(this.targetExpiration) >= 0;
-      if (noTarget || expired) {
-        this.setNewTarget();
-        this.hasChanged = true;
-      }
-      if (!this.searchingSince) {
-        this.searchingSince = Date.now();
-      }
-    }
-    return this.hasChanged;
-  }
-}
-const searchManager = new SearchManager();
 
 export const setup = (subject: BehaviorSubject<IFaceRecord[]>) => {
   recordsSubject = subject;
@@ -222,7 +141,7 @@ const eyesAfterLook = distance => {
 export const onFaces = (faces: IFaceRecord[]) => {
   faceManager.updateFaces(faces);
   searchManager.update(faceManager.target);
-  stateManager.update();
+  stateManager.update(faceManager, searchManager);
 
   switch (stateManager.state) {
     case BEHAVIOUR_STATE.AT_TARGET:

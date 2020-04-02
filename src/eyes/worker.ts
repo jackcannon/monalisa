@@ -1,6 +1,6 @@
 import { parentPort } from 'worker_threads';
-import { IEyeConfig } from './interfaces';
-import { OLED_LAYER } from './interfaces';
+import { IEyeConfig } from '../interfaces';
+import { OLED_LAYER } from '../interfaces';
 
 // type OLED_LAYER = string;
 

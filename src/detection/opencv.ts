@@ -1,15 +1,16 @@
 import cv from 'opencv';
-import { parentPort, isMainThread, threadId } from 'worker_threads';
 import { BehaviorSubject } from 'rxjs';
 
-import { IFaceRecord } from './interfaces';
-import { toFixed } from './utils';
-import { cameraOptions, savePhotoOnDetection, opencvConfig } from './config';
+import { IFaceRecord } from '../interfaces';
+import { toFixed, getPromise } from '../utils';
+import { cameraOptions, savePhotoOnDetection, opencvConfig } from '../config';
+import { log } from '../dashboard/dashboard';
+
 import { getFrames } from './cameraHelper';
-import { log } from './dashboard';
 
-const dataPath = `./src/opencv/${opencvConfig.dataName}.xml`;
+const dataPath = `./src/lib/opencv/${opencvConfig.dataName}.xml`;
 
+let recordsSubject: BehaviorSubject<IFaceRecord[]> = new BehaviorSubject<IFaceRecord[]>(null);
 let framesSubject: BehaviorSubject<Buffer> = null;
 let detectCount: number = 0;
 
@@ -20,49 +21,19 @@ interface ICVBox {
   height: number;
 }
 
-// parentPort.on("message", msg => {
-//   switch (msg.type) {
-//     case "detect":
-//       handleDetectMsg(msg);
-//       break;
-//   }
-// });
-
-const setup = async () => {
+export const startDetection = async (): Promise<BehaviorSubject<IFaceRecord[]>> => {
   framesSubject = await getFrames();
-  await framesSubject.toPromise();
-  parentPort.postMessage({ type: 'init' });
+  startProcessing();
+  await getPromise(recordsSubject);
+  return recordsSubject;
 };
 
-const startProcessing = async () => {
+export const startProcessing = async () => {
   const points = await detect(framesSubject.value);
   detectCount++;
-  parentPort.postMessage({
-    type: 'points',
-    points,
-    count: detectCount,
-  });
+  recordsSubject.next(points);
   startProcessing();
 };
-
-// const handleDetectMsg = async (msg: {
-//   type: string;
-//   buffer: Uint8Array;
-//   count: number;
-// }) => {
-//   const { count } = msg;
-//   parentPort.postMessage({
-//     type: "receipt",
-//     count: msg.count
-//   });
-//   const buffer = Buffer.from(msg.buffer);
-//   const points = await detect(buffer, msg.count);
-//   parentPort.postMessage({
-//     type: "points",
-//     points,
-//     count
-//   });
-// };
 
 const cvReadImage = imgBuffer =>
   new Promise((resolve, reject) => {
@@ -105,5 +76,3 @@ const saveOutput = async (im, faces) => {
   im.save(outputName);
   log.log('Image saved to ' + outputName);
 };
-
-setup();

@@ -1,7 +1,7 @@
 import { Board } from 'johnny-five';
 import { RaspiIO } from 'raspi-io';
-import * as movement from './movement';
-import * as eyes from './eyes';
+import * as movement from './behaviour/movement';
+import * as eyes from './eyes/eyes';
 import { delay } from './utils';
 
 const board: any = new Board({

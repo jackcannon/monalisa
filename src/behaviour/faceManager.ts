@@ -1,13 +1,12 @@
-import { IFace, IFaceRecord, IPoint, ITargetManager } from './interfaces';
+import { IFace, IFaceRecord, IPoint, ITargetManager } from '../interfaces';
 import {
   sameFaceThreshold,
   cullFaceThreshold,
   durationBeforeForgettingFace,
   durationLookingAtEachFace,
   minimumDurationToBeTargetable,
-} from './config';
-import { distanceBetweenPoints, since } from './utils';
-import { log } from './dashboard';
+} from '../config';
+import { distanceBetweenPoints, since } from '../utils';
 
 const dataLimit = 100;
 

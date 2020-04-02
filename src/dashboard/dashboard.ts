@@ -1,6 +1,6 @@
 import { fork } from 'child_process';
-import { showDashboard } from './config';
-import { IFaceRecord, IFace, BEHAVIOUR_STATE } from './interfaces';
+import { showDashboard } from '../config';
+import { IFaceRecord, IFace, BEHAVIOUR_STATE } from '../interfaces';
 import {
   IChildProcessMessage,
   IDashboardSetup,
@@ -8,7 +8,7 @@ import {
   IDashboardDetections,
   IDashboardBehaviour,
 } from './dashboardTypes';
-import { since } from './utils';
+import { since } from '../utils';
 
 let log = { log: console.log };
 let childProcess;
@@ -33,7 +33,7 @@ export const shutdown = async () => {
 
 export const setup = start => {
   if (showDashboard) {
-    childProcess = fork(__dirname + '/dashboard-child.js');
+    childProcess = fork(__dirname + '/child.js');
     childProcess.on('message', msg => handleIncomingMessage(msg));
     log.log = (...args) => {
       childProcess.send({

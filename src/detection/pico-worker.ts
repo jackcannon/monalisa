@@ -1,16 +1,15 @@
 import { workerData, parentPort, isMainThread } from 'worker_threads';
-import { IFaceRecord } from './interfaces';
-import * as pico from './lib/pico';
 import * as canvas from 'canvas';
 import fetch from 'node-fetch';
-import { Canvas } from 'canvas';
-import { delay } from 'rxjs/operators';
-import { toFixed, createTimer } from './utils';
+
+import { IFaceRecord } from '../interfaces';
+import * as pico from '../lib/pico';
+import { toFixed, createTimer } from '../utils';
 
 const { cameraOptions } = workerData;
 const cascadefile =
   'https://raw.githubusercontent.com/nenadmarkus/pico/c2e81f9d23cc11d1a612fd21e4f9de0921a5d0d9/rnt/cascades/facefinder';
-let facefinder_classify_region = function (r, c, s, pixels, ldim) {
+let facefinder_classify_region = function(r, c, s, pixels, ldim) {
   return -1.0;
 };
 

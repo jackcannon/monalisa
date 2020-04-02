@@ -1,14 +1,14 @@
 import * as faceapi from 'face-api.js';
+import { parentPort, isMainThread, threadId } from 'worker_threads';
 import {
   canvas,
   faceDetectionNet,
   getFaceDetectorOptions,
   saveFile,
-} from './face-api/examples-nodejs/commons';
-import { IFaceRecord, IWorkerInit, IWorkerDetect, IWorkerPoints } from './interfaces';
-import { toFixed } from './utils';
-import { parentPort, isMainThread, threadId } from 'worker_threads';
-import { cameraOptions, savePhotoOnDetection, faceApiConfig } from './config';
+} from '../lib/face-api/examples-nodejs/commons';
+import { IFaceRecord, IWorkerInit, IWorkerDetect, IWorkerPoints } from '../interfaces';
+import { toFixed } from '../utils';
+import { cameraOptions, savePhotoOnDetection, faceApiConfig } from '../config';
 
 let faceDetectionOptions;
 
@@ -21,7 +21,7 @@ parentPort.on('message', msg => {
 });
 
 const setup = async () => {
-  await faceDetectionNet.loadFromDisk('./src/face-api/weights');
+  await faceDetectionNet.loadFromDisk('./src/lib/face-api/weights');
   faceDetectionOptions = getFaceDetectorOptions(faceDetectionNet, {
     minFaceSize: faceApiConfig.minFaceSize,
     scaleFactor: 0.8,

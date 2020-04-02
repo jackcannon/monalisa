@@ -2,13 +2,13 @@ import { Worker, isMainThread, parentPort, workerData } from 'worker_threads';
 import { BehaviorSubject } from 'rxjs';
 import { filter } from 'rxjs/operators';
 
-import { IFaceRecord, DETECTION_TYPE, IWorkerDetect } from './interfaces';
+import { IFaceRecord, DETECTION_TYPE, IWorkerDetect } from '../interfaces';
 import { getFrames } from './cameraHelper';
-import { getPromise } from './utils';
+import { getPromise } from '../utils';
 
 const workerPaths = {
-  [DETECTION_TYPE.OPENCV]: './dist/worker-opencv.js',
-  [DETECTION_TYPE.FACEAPI]: './dist/worker-faceapi.js',
+  [DETECTION_TYPE.OPENCV]: './dist/opencv-worker.js',
+  [DETECTION_TYPE.FACEAPI]: './dist/faceapi-worker.js',
 };
 
 let worker;

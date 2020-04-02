@@ -1,10 +1,11 @@
 import * as five from 'johnny-five';
-import { IEyeConfig, OLED_COLOR } from './interfaces';
 import { Worker } from 'worker_threads';
 import { BehaviorSubject } from 'rxjs';
 import { first } from 'rxjs/operators';
-import { oledForeColor } from './config';
 const OLED = require('oled-js');
+
+import { IEyeConfig, OLED_COLOR } from '../interfaces';
+import { oledForeColor } from '../config';
 
 let oled;
 
@@ -13,7 +14,7 @@ let workerMsgs: BehaviorSubject<any> = new BehaviorSubject<any>(null);
 
 const createWorker = (): Promise<any> => {
   return new Promise(resolve => {
-    worker = new Worker('./dist/worker-eyes.js', {});
+    worker = new Worker('./dist/eyes/worker.js', {});
     worker.on('message', data => {
       workerMsgs.next(data);
       if (data && data.type && data.type === 'init') {
