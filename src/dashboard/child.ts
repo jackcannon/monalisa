@@ -188,6 +188,16 @@ const createStateBox = (id, ...pos) => {
     label: null,
     content: id,
     tags: true,
+    style: {
+      fg: 'black',
+      bg: 'black',
+      bold: true,
+      border: {
+        fg: 'black',
+        bg: 'black',
+        bold: true,
+      },
+    },
   });
 };
 const stateBoxes = {
