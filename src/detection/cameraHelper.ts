@@ -1,7 +1,7 @@
 import raspberryPiCamera from 'raspberry-pi-camera-native';
 import { BehaviorSubject } from 'rxjs';
 import { cameraOptions } from '../config';
-import { getPromise } from '../utils';
+import { getPromise } from '../utils/utils';
 
 let framesSubject: BehaviorSubject<Buffer> = new BehaviorSubject<Buffer>(null);
 

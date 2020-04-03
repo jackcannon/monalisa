@@ -128,8 +128,9 @@ export const dontBlinkDistanceThreshold = 1;
 // ----------------------------
 
 export const durationLookingAtEachFace = 5_000;
-export const durationBeforeForgettingFace = 2_000;
-export const minimumDurationToBeTargetable = 500;
+export const durationBeforeIgnoringFace = 2_500;
+export const durationBeforeForgettingFace = 10_000;
+export const minimumDurationToBeTargetable = 750;
 export const durationSearchingBeforeSleeping = 30_000;
 
 export const enableSleeping = false;

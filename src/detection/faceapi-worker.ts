@@ -7,7 +7,7 @@ import {
   saveFile,
 } from '../lib/face-api/examples-nodejs/commons';
 import { IFaceRecord, IWorkerInit, IWorkerDetect, IWorkerPoints } from '../interfaces';
-import { toFixed } from '../utils';
+import { toFixed } from '../utils/utils';
 import { cameraOptions, savePhotoOnDetection, faceApiConfig } from '../config';
 
 let faceDetectionOptions;

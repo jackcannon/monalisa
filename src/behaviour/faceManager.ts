@@ -2,20 +2,43 @@ import { IFace, IFaceRecord, IPoint, ITargetManager } from '../interfaces';
 import {
   sameFaceThreshold,
   cullFaceThreshold,
+  durationBeforeIgnoringFace,
   durationBeforeForgettingFace,
   durationLookingAtEachFace,
   minimumDurationToBeTargetable,
 } from '../config';
-import { distanceBetweenPoints, since } from '../utils';
+import { distanceBetweenPoints, since } from '../utils/utils';
+import nameGenerator from '../utils/names';
 
 const dataLimit = 100;
 
 export class KnownFace implements IFace {
+  name: string;
   point: IFaceRecord; // last known location
   historicalPoints: IFaceRecord[] = [];
   isTarget: boolean = false;
   firstSeen: number = null;
   lastSeen: number = null;
+
+  constructor() {
+    this.name = nameGenerator();
+  }
+
+  get isIgnored(): boolean {
+    return since(this.lastSeen) > durationBeforeIgnoringFace;
+  }
+
+  get isForgotten(): boolean {
+    return since(this.lastSeen) > durationBeforeForgettingFace;
+  }
+
+  get isTargetable(): boolean {
+    return since(this.firstSeen) > minimumDurationToBeTargetable;
+  }
+
+  get isEligible(): boolean {
+    return this.isTargetable && !this.isIgnored;
+  }
 
   distanceTo(point: IPoint) {
     return distanceBetweenPoints(point, this.point);
@@ -31,17 +54,27 @@ export class KnownFace implements IFace {
     return this.distanceTo(point) < cullFaceThreshold;
   }
 
-  isForgotten() {
-    return since(this.lastSeen) > durationBeforeForgettingFace;
-  }
-
-  isTargetable() {
-    return since(this.firstSeen) > minimumDurationToBeTargetable;
-  }
-
   toData(): IFace {
-    const { point, isTarget, firstSeen, lastSeen } = this;
-    return { point, isTarget, firstSeen, lastSeen } as IFace;
+    const {
+      name,
+      point,
+      isTarget,
+      firstSeen,
+      lastSeen,
+      isTargetable,
+      isIgnored,
+      isEligible,
+    } = this;
+    return {
+      name,
+      point,
+      isTarget,
+      firstSeen,
+      lastSeen,
+      isTargetable,
+      isIgnored,
+      isEligible,
+    } as IFace;
   }
 
   updateTarget(target: KnownFace) {
@@ -98,11 +131,13 @@ export class FaceManager implements ITargetManager {
 
   updateTarget() {
     const noCurrTarget = !this.target && this.knownFaces.length;
+    const targetNotEligible = this.target && !this.target.isEligible;
     const targetGone = !this.knownFaces.includes(this.target);
     const timeToSwitch = since(this.targetSince) > durationLookingAtEachFace;
-    const eligibleFaces = timeToSwitch && this.otherFaces.filter(face => face.isTargetable());
-    if (noCurrTarget || targetGone || (timeToSwitch && eligibleFaces.length)) {
-      let candidates = eligibleFaces || this.otherFaces; // eligableFaces only for timeToSwitch
+    const eligibleFaces =
+      (targetNotEligible || timeToSwitch) && this.otherFaces.filter(face => face.isEligible);
+    if (noCurrTarget || targetNotEligible || targetGone || (timeToSwitch && eligibleFaces.length)) {
+      let candidates = eligibleFaces || this.otherFaces; // eligibleFaces for timeToSwitch & targetNotEligible only
       if (candidates.length) {
         this.target = candidates[Math.floor(Math.random() * candidates.length)];
         this.targetSince = Date.now();
@@ -129,7 +164,7 @@ export class FaceManager implements ITargetManager {
       }
     });
     // removing old faces goes here
-    this.prioritisedFaces.filter(face => face.isForgotten()).forEach(face => this.removeFace(face));
+    this.prioritisedFaces.filter(face => face.isForgotten).forEach(face => this.removeFace(face));
 
     const nonCulled = unused.filter(
       point => !this.knownFaces.find(face => face.isInCullSpace(point)),

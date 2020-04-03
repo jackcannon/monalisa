@@ -4,7 +4,7 @@ import fetch from 'node-fetch';
 
 import { IFaceRecord } from '../interfaces';
 import * as pico from '../lib/pico';
-import { toFixed, createTimer } from '../utils';
+import { toFixed, createTimer } from '../utils/utils';
 
 const { cameraOptions } = workerData;
 const cascadefile =

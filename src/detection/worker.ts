@@ -4,7 +4,7 @@ import { filter } from 'rxjs/operators';
 
 import { IFaceRecord, DETECTION_TYPE, IWorkerDetect } from '../interfaces';
 import { getFrames } from './cameraHelper';
-import { getPromise } from '../utils';
+import { getPromise } from '../utils/utils';
 
 const workerPaths = {
   [DETECTION_TYPE.OPENCV]: './dist/opencv-worker.js',

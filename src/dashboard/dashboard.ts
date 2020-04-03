@@ -8,7 +8,7 @@ import {
   IDashboardDetections,
   IDashboardBehaviour,
 } from './dashboardTypes';
-import { since } from '../utils';
+import { since } from '../utils/utils';
 
 let log = { log: console.log };
 let childProcess;

@@ -10,7 +10,7 @@ import {
   IEyeConfig,
 } from '../interfaces';
 import * as eyes from '../eyes/eyes';
-import { delay, toFixed } from '../utils';
+import { delay, toFixed } from '../utils/utils';
 import {
   dontBlinkDistanceThreshold,
   enableBlinking,

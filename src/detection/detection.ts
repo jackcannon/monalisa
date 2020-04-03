@@ -1,7 +1,7 @@
 import { BehaviorSubject } from 'rxjs';
 import { filter } from 'rxjs/operators';
 
-import { createTimer, toFixed } from '../utils';
+import { createTimer, toFixed } from '../utils/utils';
 import { IFaceRecord, DETECTION_TYPE } from '../interfaces';
 import { log, addDetections } from '../dashboard/dashboard';
 import { useWorker, detectionType } from '../config';

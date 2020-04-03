@@ -5,13 +5,14 @@ import {
   blessedStyleText,
   pad,
   timeSince,
-} from '../utils';
+} from '../utils/utils';
 import {
   savePhotoOnDetection,
   photoWidth,
   moveSpeed,
   dontBlinkDistanceThreshold,
   durationLookingAtEachFace,
+  durationBeforeIgnoringFace,
   durationBeforeForgettingFace,
   moveType,
   enableSleeping,
@@ -20,7 +21,14 @@ import {
   sameFaceThreshold,
   cullFaceThreshold,
 } from '../config';
-import { MOVEMENT_TYPE, IPoint, IFaceRecord, IFace, BEHAVIOUR_STATE } from '../interfaces';
+import {
+  MOVEMENT_TYPE,
+  IPoint,
+  IFaceRecord,
+  IFace,
+  BEHAVIOUR_STATE,
+  IBlessedDispConfig,
+} from '../interfaces';
 
 import { IDashboardSetup, IDashboardDetections, IDashboardBehaviour } from './dashboardTypes';
 
@@ -29,21 +37,56 @@ const contrib = require('blessed-contrib');
 
 const dataLength = -100;
 
-const faceColours = ['magenta', 'cyan', 'yellow', 'white', 'red', 'green', 'blue'];
+const dispConfigManager = new (class {
+  options: IBlessedDispConfig[] = [
+    { fg: 'magenta', bold: true },
+    { fg: 'cyan', bold: true },
+    { fg: 'yellow', bold: true },
+    { fg: 'white', bold: true },
+    { fg: 'green', bold: true },
+    { fg: 'blue', bold: true },
+    { fg: 'magenta', bold: false },
+    { fg: 'cyan', bold: false },
+    { fg: 'yellow', bold: false },
+    { fg: 'white', bold: false },
+    { fg: 'green', bold: false },
+    { fg: 'blue', bold: false },
+  ];
+  registry: { [name: string]: IBlessedDispConfig } = {};
+  index: number = 0;
+
+  get(name: string) {
+    if (!name) {
+      return {
+        fg: 'black',
+        bold: true,
+      };
+    }
+    const reg = this.registry[name];
+    if (reg) {
+      return reg;
+    }
+    const newReg = this.options[this.index];
+    this.index = (this.index + 1) % this.options.length;
+    this.registry[name] = newReg;
+    return newReg;
+  }
+})();
 
 const configArr = [
   ['savePhotoOnDetection', savePhotoOnDetection],
   ['photoWidth', photoWidth],
+  ['enableSleeping', enableSleeping],
+  ['enableBlinking', enableBlinking],
+  ['enableWinking', enableWinking],
   ['moveSpeed - FACE', moveSpeed[MOVEMENT_TYPE.FACE]],
   ['moveSpeed - SEARCH', moveSpeed[MOVEMENT_TYPE.SEARCH]],
   ['moveType - FACE', moveType[MOVEMENT_TYPE.FACE]],
   ['moveType - SEARCH', moveType[MOVEMENT_TYPE.SEARCH]],
-  ['dontBlinkDistanceThreshold', dontBlinkDistanceThreshold],
+  // ['dontBlinkDistanceThreshold', dontBlinkDistanceThreshold],
   ['durationLookingAtEachFace', durationLookingAtEachFace],
+  ['durationBeforeIgnoringFace', durationBeforeIgnoringFace],
   ['durationBeforeForgettingFace', durationBeforeForgettingFace],
-  ['enableSleeping', enableSleeping],
-  ['enableBlinking', enableBlinking],
-  ['enableWinking', enableWinking],
   ['sameFaceThreshold', sameFaceThreshold],
   ['cullFaceThreshold', cullFaceThreshold],
 ];
@@ -231,49 +274,66 @@ const formatFaceNumData = (records, count: number) => ({
   x: records.map((_v, i) => (i + count - records.length).toString()),
   y: records.map(points => points.length),
 });
-const formatFaceContent = (face: IFace, colour: string) => {
-  let str = face ? `{${colour}-fg}` : '{white-fg}';
+const formatDataType = value => {
+  let color = null;
+  if (typeof value === 'boolean') {
+    color = value ? 'green-fg' : 'red-fg';
+  } else if (typeof value === 'string') {
+    color = 'blue-fg';
+  } else if (typeof value === 'number') {
+    color = 'yellow-fg';
+  }
+  return color ? `{${color}}${value}{/${color}}` : value;
+};
+const toTags = (value: any, config: IBlessedDispConfig) => {
+  return blessedStyleText(value, config.fg, null, config.bold);
+};
+const formatFaceContent = (face: IFace, dispConfig: IBlessedDispConfig) => {
+  const [startTags, endTags] = toTags('XXX', dispConfig).split('XXX');
+  let str = startTags;
+
+  const tickSymbol = ['      XXX', '     XXX ', 'XXX XXX  ', ' XXXX    ', '  XX     '].join('\n');
+  const crossSymbol = ['XXX   XXX', ' XXX XXX ', '   XXX   ', ' XXX XXX ', 'XXX   XXX'].join('\n');
+
   if (face) {
-    const targetColour = face.isTarget ? 'white' : colour;
+    const symbol = face.isEligible ? tickSymbol : crossSymbol;
 
     str += `
-{center}      XXX{/center}
-{center}     XXX {/center}
-{center}XXX XXX  {/center}
-{center} XXXX    {/center}
-{center}  XX     {/center}
+{center}${symbol}{/center}
+Target: ${formatDataType(face.isTarget)}
 
-{${targetColour}-fg}Is Target: ${face.isTarget}{/${targetColour}-fg}
-
-X: ${pad(face.point.x, 4)}{|}Y: ${pad(face.point.y, 4)}
 First: ${timeSince(face.firstSeen)}
 Last: ${timeSince(face.lastSeen)}
+Ignored: ${formatDataType(face.isIgnored)}
+Targetable: ${formatDataType(face.isTargetable)}
+Eligible: ${formatDataType(face.isEligible)}
 `;
   } else {
     str += `
-{center}XXX   XXX{/center}
-{center} XXX XXX {/center}
-{center}   XXX   {/center}
-{center} XXX XXX {/center}
-{center}XXX   XXX{/center}
+{center}${crossSymbol}{/center}
 `;
   }
-  str += '{/}';
+  str += endTags;
   return str;
 };
 const updateFaceBoxes = (faces: IFace[]) => {
   faceBoxes.forEach((faceBox, i) => {
-    const colour = faceColours[i % faceColours.length];
-    const content = formatFaceContent(faces[i], colour);
+    const dispConfig = faces[i]
+      ? dispConfigManager.get(faces[i].name)
+      : { fg: 'black', bold: true };
+    const content = formatFaceContent(faces[i], dispConfig);
+    faceBox.setLabel(faces[i] ? faces[i].name : 'Face ' + (i + 1));
     faceBox.setContent(content);
     faceBox.style.border = {
-      fg: faces[i] ? colour : 'black',
-      bold: true,
+      ...dispConfig,
+      border: {
+        ...dispConfig,
+      },
     };
   });
 };
 const updateFaceMapBox = (
-  faces: IPoint[] = [],
+  faces: IFace[] = [],
   detections: IFaceRecord[] = [],
   searchTarget: IPoint = null,
 ) => {
@@ -294,8 +354,7 @@ const updateFaceMapBox = (
   const applyMarkers = (
     markers: { x: number; y: number; char: string }[],
     { x, y }: IPoint,
-    colour: string,
-    bold: boolean = false,
+    dispConfig: IBlessedDispConfig,
   ) => {
     markers
       .filter(
@@ -304,7 +363,7 @@ const updateFaceMapBox = (
       )
       .forEach(({ x: mX, y: mY, char }) => {
         const char2 = char === '#' ? ' ' : char;
-        const dispChar = blessedStyleText(char2, colour, null, bold);
+        const dispChar = toTags(char2, dispConfig);
         space[y + mY].splice(x + mX, 1, dispChar);
       });
   };
@@ -315,13 +374,13 @@ const updateFaceMapBox = (
     space[y].splice(x, 1, displayString);
   });
   faces.map((face, i) => {
-    const charCoors = getCharCoors(face);
+    const charCoors = getCharCoors(face.point);
     const { x, y } = charCoors;
-    const faceCol = faceColours[i % faceColours.length];
-    const displayString = blessedStyleText(i + 1, faceCol);
+    const dispConfig = dispConfigManager.get(face.name);
+    const displayString = toTags(i + 1, dispConfig);
     space[y].splice(x, 1, displayString);
 
-    applyMarkers(faceMarkers, charCoors, faceCol);
+    applyMarkers(faceMarkers, charCoors, dispConfig);
   });
   if (searchTarget) {
     const searchAscii = [' .-. ', '| X |', " '-' "];
@@ -331,26 +390,26 @@ const updateFaceMapBox = (
     const displayString = blessedStyleText('X', 'red', null, true);
     space[y].splice(x, 1, displayString);
 
-    applyMarkers(searchMarkers, charCoors, 'red', true);
+    applyMarkers(searchMarkers, charCoors, { fg: 'red', bold: true });
   }
   faceMapBox.setContent(space.map(col => col.join('')).join(''));
 };
 
 // This is a mess. 3 ifs for AT_TARGET. needs refactor
 const updateStateBoxes = (state: string, faces: IFace[]) => {
-  let targetIndex;
+  let targetName;
   if (state === BEHAVIOUR_STATE.AT_TARGET) {
     const target = faces.find(face => face.isTarget);
-    targetIndex = target ? faces.indexOf(target) : 0;
+    targetName = target ? target.name : '';
   }
 
   stateBoxes.all.forEach(([id, stateBox]) => {
     let content: string = '';
 
-    if (state === BEHAVIOUR_STATE.AT_TARGET) {
+    if (id === 'AT_TARGET' && targetName !== undefined) {
       const buffer = '\n'.repeat(Math.max(0, Math.floor((stateBox.height - 2 - 3) / 2)));
       content += `${buffer}{center}${id}{/center}`;
-      content += `\n\n{center}Target: ${targetIndex}{/center}`;
+      content += `\n\n{center}Target: ${targetName}{/center}`;
     } else {
       const buffer = '\n'.repeat(Math.max(0, Math.floor((stateBox.height - 2 - 1) / 2)));
       content += `${buffer}{center}${id}{/center}`;
@@ -367,26 +426,22 @@ const updateStateBoxes = (state: string, faces: IFace[]) => {
       },
     };
   });
-  let colour = {
+  let dispConfig: IBlessedDispConfig = {
     [BEHAVIOUR_STATE.AT_TARGET]: null,
-    [BEHAVIOUR_STATE.SEARCHING]: 'red',
-    [BEHAVIOUR_STATE.SLEEPING]: 'blue',
-    [BEHAVIOUR_STATE.WAKING_UP]: 'blue',
-    [BEHAVIOUR_STATE.AWAKE]: 'blue',
+    [BEHAVIOUR_STATE.SEARCHING]: { fg: 'red', bold: true },
+    [BEHAVIOUR_STATE.SLEEPING]: { fg: 'blue', bold: true },
+    [BEHAVIOUR_STATE.WAKING_UP]: { fg: 'blue', bold: true },
+    [BEHAVIOUR_STATE.AWAKE]: { fg: 'blue', bold: true },
   }[state];
 
   if (state === BEHAVIOUR_STATE.AT_TARGET) {
-    colour = faceColours[targetIndex % faceColours.length];
+    dispConfig = dispConfigManager.get(targetName);
   }
 
   stateBoxes[state].style = {
-    fg: colour,
-    bg: 'black',
-    bold: true,
+    ...dispConfig,
     border: {
-      fg: colour,
-      bg: 'black',
-      bold: true,
+      ...dispConfig,
     },
   };
 };
@@ -416,9 +471,8 @@ const addDetections = ({ points, delta }: IDashboardDetections) => {
 
 const updateBehaviour = ({ faces, state, time, searchTarget }: IDashboardBehaviour) => {
   faceMapBox.setLabel('' + state + ' ' + (Date.now() - time));
-  const facePoints = faces.map(face => face.point);
 
-  updateFaceMapBox(facePoints, detectionRecords[detectionRecords.length - 1], searchTarget);
+  updateFaceMapBox(faces, detectionRecords[detectionRecords.length - 1], searchTarget);
   updateFaceBoxes(faces);
   updateStateBoxes(state, faces);
 };

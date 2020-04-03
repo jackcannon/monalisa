@@ -7,7 +7,7 @@ import * as detection from './detection/detection';
 import * as eyes from './eyes/eyes';
 import * as behaviour from './behaviour/behaviour';
 import * as dashboard from './dashboard/dashboard';
-import { formatTime, delay } from './utils';
+import { formatTime, delay } from './utils/utils';
 
 const start = Date.now();
 

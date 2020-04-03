@@ -12,11 +12,15 @@ export interface IFaceRecord extends IFacePoint {
 }
 
 export interface IFace {
+  name?: string;
   point: IFaceRecord; // last known location
   // historicalPoints: IFaceRecord[];
   isTarget: boolean;
   firstSeen: number;
   lastSeen: number;
+  isTargetable?: boolean;
+  isIgnored?: boolean;
+  isEligible?: boolean;
 }
 
 export interface ITargetManager {
@@ -146,4 +150,9 @@ export interface IDashboardLog extends IChildProcessMessage {
 export interface IDashboardRecord extends IChildProcessMessage {
   points: IFaceRecord[];
   delta: number;
+}
+
+export interface IBlessedDispConfig {
+  fg: string;
+  bold: boolean;
 }

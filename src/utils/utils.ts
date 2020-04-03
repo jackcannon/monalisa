@@ -49,7 +49,7 @@ export const timeSince = (since: number) => {
     let str = '';
     if (secs > 60) {
       const mins = Math.floor(secs / 60);
-      str += `${mins}m, `;
+      str += `${mins}m `;
     }
 
     str += `${secs % 60}s ago`;

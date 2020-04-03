@@ -5,7 +5,7 @@ import {
   searchDurationRandom,
   enableSleeping,
 } from '../config';
-import { toFixed, since } from '../utils';
+import { toFixed, since } from '../utils/utils';
 
 import { KnownFace } from './faceManager';
 

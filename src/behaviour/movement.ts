@@ -2,7 +2,7 @@ import { Servo, Servos, Animation } from 'johnny-five';
 import { Subject } from 'rxjs';
 
 import { IPoint, MOVE_TYPE, MOVEMENT_TYPE } from '../interfaces';
-import { createTimer, toFixed, distanceBetweenPoints, getPromise } from '../utils';
+import { createTimer, toFixed, distanceBetweenPoints, getPromise } from '../utils/utils';
 import { FOVX, FOVY, easeType, moveSpeed, moveType } from '../config';
 
 const servos: { [servoName: string]: Servo } = {};

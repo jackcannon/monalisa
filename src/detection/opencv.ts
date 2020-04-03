@@ -2,7 +2,7 @@ import cv from 'opencv';
 import { BehaviorSubject } from 'rxjs';
 
 import { IFaceRecord } from '../interfaces';
-import { toFixed, getPromise } from '../utils';
+import { toFixed, getPromise } from '../utils/utils';
 import { cameraOptions, savePhotoOnDetection, opencvConfig } from '../config';
 import { log } from '../dashboard/dashboard';
 

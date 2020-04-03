@@ -3,7 +3,7 @@ import { parentPort, isMainThread, threadId } from 'worker_threads';
 import { BehaviorSubject } from 'rxjs';
 
 import { IFaceRecord } from '../interfaces';
-import { toFixed } from '../utils';
+import { toFixed } from '../utils/utils';
 import { cameraOptions, savePhotoOnDetection, opencvConfig } from '../config';
 import { log } from '../dashboard/dashboard';
 
