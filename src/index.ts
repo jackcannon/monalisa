@@ -29,20 +29,12 @@ process.stdin.on('keypress', (str, key) => {
 });
 
 const shutdown = async () => {
-  console.log('A');
   await dashboard.shutdown();
-  console.log('B');
   eyes.reset();
-  console.log('C');
   movement.reset();
-  console.log('D');
   await delay(500);
-  console.log('E');
   console.log("I've been alive for:", formatTime(Date.now() - start));
-  console.log();
-  console.log();
   process.kill(0);
-  console.log('F');
 };
 
 board.on('ready', async () => {

@@ -151,8 +151,3 @@ export interface IDashboardRecord extends IChildProcessMessage {
   points: IFaceRecord[];
   delta: number;
 }
-
-export interface IBlessedDispConfig {
-  fg: string;
-  bold: boolean;
-}

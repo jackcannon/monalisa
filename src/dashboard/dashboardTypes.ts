@@ -20,3 +20,23 @@ export interface IDashboardBehaviour extends IChildProcessMessage {
   searchTarget: IPoint;
   time: number;
 }
+
+export interface IBlessedDispConfig {
+  fg: string;
+  bold: boolean;
+}
+
+export interface IDashComponent {
+  gridItem: any;
+  init: (grid: any, coors: number[]) => any;
+  setup?: () => any;
+  update?: (manager: IDashManagerData) => any;
+  updateBehaviour?: (msg: IDashboardBehaviour, manager: IDashManagerData) => any;
+}
+
+export interface IDashManagerData {
+  startTime: number;
+  detectionTimes: number[];
+  totalRecordCount: number;
+  detectionRecords: IFaceRecord[][];
+}
