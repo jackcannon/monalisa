@@ -22,6 +22,7 @@ parentPort.on('message', msg => {
 
 const setup = async () => {
   await faceDetectionNet.loadFromDisk('./src/lib/face-api/weights');
+  // @ts-ignore
   faceDetectionOptions = getFaceDetectorOptions(faceDetectionNet, {
     minFaceSize: faceApiConfig.minFaceSize,
     scaleFactor: 0.8,
