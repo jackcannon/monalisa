@@ -6,15 +6,24 @@ import {
   MOVEMENT_TYPE,
   IPoint,
   BEHAVIOUR_STATE,
+  SPEED_FORMAT,
 } from './interfaces';
 
-// ----------------------------
-//
-//           MAIN
-//
-// ----------------------------
+//------------------------------//
+//                              //
+//          DASHBOARD           //
+//                              //
+//------------------------------//
 
 export const showDashboard = true;
+
+export let detectionTimesFormat = SPEED_FORMAT.MS;
+
+//------------------------------//
+//                              //
+//    CAMERA / FACE DETECTION   //
+//                              //
+//------------------------------//
 
 // USE FACEAPI
 // export let detectionType = DETECTION_TYPE.FACEAPI;
@@ -23,12 +32,6 @@ export const showDashboard = true;
 // USE OPENCV
 export let detectionType = DETECTION_TYPE.OPENCV;
 export let useWorker = false;
-
-// ----------------------------
-//
-//    CAMERA / FACE DETECTION
-//
-// ----------------------------
 
 // Standard RaspiCam
 export const FOVX = 70;
@@ -46,8 +49,14 @@ export const savePhotoOnDetection = false;
 
 export const photoRatio = 480 / 640;
 // export const photoWidth = 640;
+// export const photoWidth = 600;
+// export const photoWidth = 560;
+// export const photoWidth = 520;
 // export const photoWidth = 480;
-export const photoWidth = 320;
+// export const photoWidth = 440;
+// export const photoWidth = 400;
+export const photoWidth = 360;
+// export const photoWidth = 320;
 // export const photoWidth = 280;
 // export const photoWidth = 240;
 
@@ -84,19 +93,19 @@ export const opencvConfig = {
   // dataName: 'haarcascade_frontalface_profileface',
 };
 
-// ----------------------------
-//
-//    DISPLAY
-//
-// ----------------------------
+//------------------------------//
+//                              //
+//           DISPLAY            //
+//                              //
+//------------------------------//
 
 export let oledForeColor = OLED_COLOR.BLACK;
 
-// ----------------------------
-//
-//    MOVEMENT
-//
-// ----------------------------
+//------------------------------//
+//                              //
+//          MOVEMENT            //
+//                              //
+//------------------------------//
 
 // Speed. Higher = slower
 export const moveSpeed = {
@@ -121,11 +130,11 @@ export const easeType = {
 // Don't blink if moving more distance than this
 export const dontBlinkDistanceThreshold = 1;
 
-// ----------------------------
-//
-//    BEHAVIOUR
-//
-// ----------------------------
+//------------------------------//
+//                              //
+//         BEHAVIOUR            //
+//                              //
+//------------------------------//
 
 export const durationLookingAtEachFace = 5_000;
 export const durationBeforeIgnoringFace = 2_500;

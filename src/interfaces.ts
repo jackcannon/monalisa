@@ -58,6 +58,11 @@ export enum DETECTION_TYPE {
   PICO = 'pico',
 }
 
+export enum SPEED_FORMAT {
+  MS = 'ms',
+  FPS = 'fps',
+}
+
 export enum OLED_LAYER {
   BACK = 0,
   FORE = 1,
